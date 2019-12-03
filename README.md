@@ -1,6 +1,6 @@
 # As-Libs-Core
 
-This is my own grown open source core Java libraries that I use for all other Java projects of mine. 
+These are my own grown open source core Java libraries that I use for all my other Java projects.
 
 ## What's the point
 
