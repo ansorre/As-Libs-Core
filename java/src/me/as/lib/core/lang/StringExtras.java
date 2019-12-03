@@ -1,0 +1,3117 @@
+/*
+ * Copyright 2019 Antonio Sorrentini
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package me.as.lib.core.lang;
+
+
+import me.as.lib.core.extra.BoxFor2;
+import me.as.lib.core.extra.TimeCounter;
+
+import javax.script.ScriptEngine;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.text.Normalizer;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
+import static me.as.lib.core.extra.JavaScriptExtras.newJavaScriptEngine;
+import static me.as.lib.core.lang.ArrayExtras.isArray;
+import static me.as.lib.core.lang.ArrayExtras.isArrayOfPrimitive;
+import static me.as.lib.core.lang.ByteExtras.copyInNew;
+import static me.as.lib.core.lang.RandomExtras.intRandom;
+
+
+public class StringExtras
+{
+ // singleton
+ private StringExtras(){}
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+ public static final String LINE_SEPARATOR=System.getProperty("line.separator");
+
+ public static final char noBreakSpace=160;
+
+ public static final String utf8Charset           = "UTF-8";
+ public static final String defaultCharsetName    = utf8Charset;
+
+ public static final String considerableTrue[]=new String[]{"true", "yes", "1", "on"};
+ public static final String considerableFalse[]=new String[]{"false", "no", "0", "off", "null", "void"};
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+ /**
+  * Returns 0 if the sequence is null otherwise the sequence length
+  *
+  * @param sequence the sequence to check
+  * @return the sequence length or zero if null
+  */
+ public static int length(CharSequence sequence)
+ {
+  return (sequence==null) ? 0 : sequence.length();
+ }
+
+
+ public static byte[] getBytes(String txt)
+ {
+  return getBytes(txt, defaultCharsetName);
+ }
+
+
+
+ public static byte[] getBytes(String txt, String charsetName)
+ {
+  byte res[];
+
+  try
+  {
+   if (hasChars(txt)) res=txt.getBytes(charsetName);
+   else res=null;
+  }
+  catch (Throwable tr)
+  {
+   throw new RuntimeException(tr);
+  }
+
+  return res;
+ }
+
+
+
+ public static boolean isOneOf(String source, String... oneOfs)
+ {
+  int t, len=ArrayExtras.length(oneOfs);
+
+  for (t=0;t<len;t++)
+   if (areEqual(source, oneOfs[t]))
+    return true;
+
+  return false;
+ }
+
+
+
+ /**
+  * Checks if sequence is not null and has more than 0 chars
+  *
+  * @param sequence the sequence to check
+  * @return returns false either if str is null or if (str.length()==0)
+  */
+ public static boolean hasChars(CharSequence sequence)
+ {
+  return (sequence!=null && sequence.length()>0);
+ }
+
+ public static boolean haveChars(CharSequence... sequence)
+ {
+  int t, len=ArrayExtras.length(sequence);
+
+  for (t=0;t<len;t++)
+  {
+   if (sequence[t]==null || sequence[t].length()==0) return false;
+  }
+
+  return true;
+ }
+
+ /**
+  * Checks if sequence is not null and has more than 0 non blank chars
+  *
+  * @param sequence the sequence to check
+  * @return returns false either if str is null or if (str.length()==0)
+  */
+ public static boolean isNotBlank(CharSequence sequence)
+ {
+  if (hasChars(sequence))
+   return hasChars(betterTrim(sequence));
+
+  return false;
+ }
+
+ public static boolean areNotBlank(CharSequence... sequence)
+ {
+  int t, len=ArrayExtras.length(sequence);
+
+  for (t=0;t<len;t++)
+  {
+   if (!isNotBlank(sequence[t])) return false;
+  }
+
+  return true;
+ }
+
+ /**
+  * Checks if sequence is not null and has more than 0 non blank chars
+  *
+  * @param sequence the sequence to check
+  * @return returns false either if str is null or if (str.length()==0)
+  */
+ public static boolean isBlank(CharSequence sequence)
+ {
+  return !isNotBlank(sequence);
+ }
+
+ public static boolean areBlank(CharSequence... sequence)
+ {
+  return !areNotBlank(sequence);
+ }
+
+
+
+ public static boolean containsOnlyThoseChars(String str, String allowedChars)
+ {
+  boolean res=true;
+
+  if (hasChars(str) && hasChars(allowedChars))
+  {
+   int t, len=str.length();
+
+   for (t=0;t<len && res;t++)
+   {
+    res=(allowedChars.indexOf(str.charAt(t))>=0);
+   }
+  }
+
+  return res;
+ }
+
+
+
+ public static int getOccurrencesCount(String str, String occurring)
+ {
+  int res=0;
+
+  if (hasChars(str) && hasChars(occurring))
+  {
+   int c=0, len=length(str);
+
+   while (c>=0 && c<len)
+   {
+    c=indexOf(str, occurring, c);
+    if (c>=0)
+    {
+     res++;
+     c++;
+    }
+   }
+  }
+
+  return res;
+ }
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Select
+
+
+ // flags for select(String str[], String compare, int flag)
+ public static final int SELECT_NONE             = 0x0000;
+ public static final int SELECT_CASE_INSENSITIVE = 0x0001;
+ public static final int SELECT_AUTOTRIM         = 0x0010;
+
+
+ public static int select(String str[], String compare)
+ {
+  return select(str, compare, SELECT_NONE, 0);
+ }
+
+
+ // returns the index of the string 'compare' in the array 'str[]'
+ // if 'compare' is not present in the array 'str[]' returns -1;
+ public static int select(String str[], String compare, int flag)
+ {
+  return select(str, compare, flag, 0);
+ }
+
+
+ // returns the index of the string 'compare' in the array 'str[]'
+ // if 'compare' is not present in the array 'str[]' returns -1;
+ public static int select(String str[], String compare, int flag, int startIndex)
+ {
+  int res=-1;
+  String tmpStr1, tmpStr2;
+
+  if (compare==null) { return res; }
+
+  try
+  {
+   int t, len=str.length;
+
+   if (len>0)
+   {
+    tmpStr2=compare;
+
+    if ((flag&SELECT_AUTOTRIM)!=0) { tmpStr2=betterTrim(tmpStr2); }
+    if ((flag&SELECT_CASE_INSENSITIVE)!=0) { tmpStr2=tmpStr2.toUpperCase(); }
+
+    for (t=startIndex;t<len && res==-1;t++)
+    {
+     try
+     {
+      tmpStr1=str[t];
+
+      if ((flag&SELECT_AUTOTRIM)!=0) { tmpStr1=betterTrim(tmpStr1); }
+      if ((flag&SELECT_CASE_INSENSITIVE)!=0) { tmpStr1=tmpStr1.toUpperCase(); }
+
+      if (tmpStr1.equals(tmpStr2))
+      {
+       res=t;
+      }
+     } catch (Throwable ignore) {}
+    }
+   }
+  } catch (Throwable ignore) {}
+
+  return res;
+ }
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Trim
+
+ public static final String blankChars=(" \t"+noBreakSpace);
+ public static final String blankChars_and_nl=(blankChars+"\n\r");
+
+ public static String trim(String str)
+ {
+  return ((str!=null)?betterTrim(str):null);
+ }
+
+
+ public static String trim(String str, boolean alsoPurgeNewLines)
+ {
+  String res;
+
+  if (alsoPurgeNewLines)
+  {
+   res=str;
+
+   if (res!=null)
+   {
+    res=replace(res, "\n", " ");
+    res=replace(res, "\r", " ");
+    res=betterTrim(res);
+   }
+  } else res=trim(str);
+
+  return res;
+ }
+
+
+ public static String[] trim(String str[])
+ {
+  return trim(str, false);
+ }
+
+
+
+ public static String[] trim(String str[], boolean alsoPurgeNewLines)
+ {
+  if (str!=null)
+  {
+   int t, len=str.length;
+
+   if (len>0)
+   {
+    for (t=0;t<len;t++)
+    {
+     str[t]=trim(str[t], alsoPurgeNewLines);
+    }
+   }
+  }
+
+  return str;
+ }
+
+ public static <L extends List<String>> L trim(L str)
+ {
+  return trim(str, false);
+ }
+
+ public static <L extends List<String>> L trim(L str, boolean alsoPurgeNewLines)
+ {
+  if (str!=null)
+  {
+   int t, len=str.size();
+
+   if (len>0)
+   {
+    for (t=0;t<len;t++)
+    {
+     str.set(t, trim(str.get(t), alsoPurgeNewLines));
+    }
+   }
+  }
+
+  return str;
+ }
+
+
+
+ public static String betterTrim(CharSequence sequence, String whatToTrim)
+ {
+  String str=sequence!=null ? sequence.toString() : null;
+
+  if (hasChars(str))
+  {
+   while (str.length()>0 && whatToTrim.indexOf(str.charAt(0))>=0) str=str.substring(1);
+   int idx=str.length()-1;
+   while (idx>=0 && whatToTrim.indexOf(str.charAt(idx))>=0) {str=str.substring(0, idx);idx=str.length()-1;}
+  }
+
+  return str;
+ }
+
+ public static String betterTrimNl(CharSequence sequence)
+ {
+  return betterTrim(sequence, blankChars_and_nl);
+ }
+
+ public static String[] betterTrimNl(String str[])
+ {
+  return betterTrim(str, blankChars_and_nl);
+ }
+
+ public static String betterTrim(CharSequence sequence)
+ {
+  return betterTrim(sequence, blankChars);
+ }
+
+
+ public static String[] betterTrim(String str[])
+ {
+  int t, len=ArrayExtras.length(str);
+  for (t=0;t<len;t++) str[t]=betterTrim(str[t]);
+  return str;
+ }
+
+
+ public static String[] betterTrim(String str[], String whatToTrim)
+ {
+  int t, len=ArrayExtras.length(str);
+  for (t=0;t<len;t++) str[t]=betterTrim(str[t], whatToTrim);
+  return str;
+ }
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // transforms
+
+ public static String toUpperCase(String str)
+ {
+  return ((str!=null)?str.toUpperCase():null);
+ }
+
+ public static String toLowerCase(String str)
+ {
+  return ((str!=null)?str.toLowerCase():null);
+ }
+
+
+ public static String reverse(String text)
+ {
+  String res=text;
+
+  if (hasChars(text))
+  {
+   StringBuilder sb=new StringBuilder();
+   int t, len=text.length();
+
+   for (t=len-1;t>=0;t--)
+   {
+    sb.append(text.charAt(t));
+   }
+
+   res=sb.toString();
+  }
+
+  return res;
+ }
+
+
+
+ public static String getMD5(String text)
+ {
+  String res;
+
+  try
+  {
+   res=ByteExtras.getMD5(text.getBytes(defaultCharsetName));
+  }
+  catch (Throwable tr)
+  {
+   res=null;
+  }
+
+  return res;
+ }
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Equal
+
+ // this returns true only if:
+ // 1) both are null
+ // 2) both are not null but are empty
+ // 3) one is null and the other is not null but is empty
+ // 4) both are not null neither empty and are equal
+ public static boolean areEqual(String str1, String str2)
+ {
+  return areEqual(str1, str2, true);
+ }
+
+
+ public static boolean areEqual(String str1, String str2, boolean caseSensitive)
+ {
+  boolean res=false;
+
+  if (str1==null && str2==null) res=true;
+  else
+  {
+   if (!caseSensitive)
+   {
+    if (str1!=null) str1=str1.toUpperCase();
+    if (str2!=null) str2=str2.toUpperCase();
+   }
+
+   if (str1!=null && str2!=null) res=str2.equals(str1);
+   else
+   {
+    if (str1==null && str2.length()==0) res=true;
+    else
+    {
+     if (str2==null && str1.length()==0) res=true;
+    }
+   }
+  }
+
+  return res;
+ }
+
+
+
+ public static boolean areEqual(String str1[], String str2[])
+ {
+  return areEqual(str1, str2, true);
+ }
+
+ public static boolean areEqual(String str1[], String str2[], boolean caseSensitive)
+ {
+  boolean res=false;
+  int t, len=ArrayExtras.length(str1);
+
+  if (ArrayExtras.length(str2)==len)
+  {
+   res=true;
+
+   for (t=0;t<len && res;t++)
+   {
+    res=areEqual(str1[t], str2[t], caseSensitive);
+   }
+  }
+
+  return res;
+ }
+
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // IndexOf
+
+
+ public static int lastIndexOf(String test, String match_mask, char charRep, boolean caseSensitive)
+ {
+  int res=-1;
+  BoxFor2 to=_prepare_IndexOf_(test, match_mask, 0, caseSensitive, false);
+
+  if (to!=null)
+  {
+   test=(String)to.element1;
+   match_mask=(String)to.element2;
+
+   if (charRep==0 || match_mask.indexOf(charRep)<0) res=test.lastIndexOf(match_mask);
+   else
+   {
+    int mlen=match_mask.length();
+    int tlen=test.length();
+
+    if (containsOnlyThoseChars(match_mask, ""+charRep)) res=tlen-mlen;
+    else
+    {
+     int max=tlen-mlen;
+     char mch;
+     char tch;
+     int matching=0;
+     int currInit=max;
+     int pos=currInit;
+     int mp=0;
+
+     do
+     {
+      tch=test.charAt(pos);
+      mch=match_mask.charAt(mp);
+
+      if (mch!=tch && mch!=charRep)
+      {
+       matching=0;
+       currInit--;
+       pos=currInit;
+       mp=0;
+      }
+      else
+      {
+       pos++;
+       mp++;
+       matching++;
+      }
+     } while (pos>=0 && matching!=mlen);
+
+     if (matching==mlen)
+     {
+      res=currInit;
+     }
+    }
+   }
+  }
+
+  return res;
+ }
+
+
+ public static int fullIndexOf(String test, String match_mask, boolean caseSensitive)
+ {
+  return indexOfShortest(test, match_mask, 0, caseSensitive);
+ }
+
+ public static int indexOfShortest(String test, String match_mask, int startIndex, boolean caseSensitive)
+ {
+  int vals[]=_indexOfShortest(test, match_mask, startIndex, caseSensitive);
+  return vals[0];
+ }
+
+ private static int[] _indexOfShortest(String test, String match_mask, int startIndex, boolean caseSensitive)
+ {
+  int res=-1;
+  int length=0;
+  char jolly='*';
+
+  if (hasChars(test) && hasChars(match_mask))
+  {
+   if (match_mask.startsWith(String.valueOf(jolly)))
+   {
+    if (doTheyMatch(test, match_mask, caseSensitive)) res=0;
+   }
+   else
+   {
+    String jollys[]=unmerge(match_mask, jolly);
+    int len=ArrayExtras.length(jollys);
+
+    if (len==1)
+    {
+     res=indexOf(test, match_mask, startIndex, caseSensitive);
+    }
+    else
+    {
+     int i=0, lastPos=0, pos=startIndex;
+
+     do
+     {
+      pos=indexOf(test, jollys[i], pos, caseSensitive);
+
+      if (pos>=0)
+      {
+       lastPos=pos;
+       if (i==0) res=pos;
+       i++;
+      } else res=-1;
+
+     } while (pos>=0 && i<len);
+
+     if (res>=0)
+     {
+      length=lastPos-res;
+      int tmp[]=_indexOfShortest(test, match_mask, res+1, caseSensitive);
+      if (tmp[0]>=0 && tmp[1]<length)
+      {
+       res=tmp[0];
+       length=tmp[1];
+      }
+     }
+    }
+   }
+  }
+
+  return new int[]{res, length};
+ }
+
+
+
+
+ public static int indexOf(String test, String match_mask, boolean caseSensitive)
+ {
+  return indexOf(test, match_mask, 0, caseSensitive);
+ }
+
+ public static int indexOf(String test, String match_mask, int startIndex, boolean caseSensitive)
+ {
+  int res=-1;
+  char charRep='?';
+  BoxFor2<String, String> b2=_prepare_IndexOf_(test, match_mask, startIndex, caseSensitive, false);
+
+  if (b2!=null)
+  {
+   test=b2.element1;
+   match_mask=b2.element2;
+
+   if (match_mask.indexOf(charRep)<0) res=test.indexOf(match_mask, startIndex);
+   else
+   {
+    if (containsOnlyThoseChars(match_mask, ""+charRep)) res=startIndex;
+    else
+    {
+     int mlen=match_mask.length();
+     int tlen=test.length();
+     int max=tlen-mlen;
+     char mch;
+     char tch;
+     int matching=0;
+     int currInit=startIndex;
+     int pos=currInit;
+     int mp=0;
+
+     do
+     {
+      tch=test.charAt(pos);
+      mch=match_mask.charAt(mp);
+
+      if (mch!=tch && mch!=charRep)
+      {
+       matching=0;
+       currInit++;
+       pos=currInit;
+       mp=0;
+      }
+      else
+      {
+       pos++;
+       mp++;
+       matching++;
+      }
+     } while (currInit<=max && matching!=mlen);
+
+     if (matching==mlen)
+     {
+      res=currInit;
+     }
+    }
+   }
+  }
+
+  return res;
+ }
+
+
+ public static int indexOf(String str, int ch)
+ {
+  int res=-1;
+  if (str!=null) res=str.indexOf(ch);
+  return res;
+ }
+
+ public static int indexOf(String str, int ch, int fromIndex)
+ {
+  int res=-1;
+  if (str!=null) res=str.indexOf(ch, fromIndex);
+  return res;
+ }
+
+ public static boolean contains(String str, String test)
+ {
+  return (indexOf(str, test)>=0);
+ }
+
+ public static int indexOf(String str, String test)
+ {
+  int res=-1;
+  if (str!=null && test!=null) res=str.indexOf(test);
+  return res;
+ }
+
+ public static int indexOf(String str, String test, int fromIndex)
+ {
+  int res=-1;
+  if (str!=null && test!=null) res=str.indexOf(test, fromIndex);
+  return res;
+ }
+
+
+ private static BoxFor2<String, String> _prepare_IndexOf_(String test, String match_mask, int startIndex, boolean caseSensitive, boolean ignoreLengths)
+ {
+  BoxFor2 to=null;
+
+  if (hasChars(test) && hasChars(match_mask) && startIndex>=0)
+  {
+   int tlen=test.length();
+   int mlen=match_mask.length();
+
+   if (ignoreLengths || mlen<=tlen)
+   {
+    if (ignoreLengths || startIndex<=tlen-mlen)
+    {
+     if (!caseSensitive)
+     {
+      test=test.toUpperCase();
+      match_mask=match_mask.toUpperCase();
+     }
+
+     to=new BoxFor2(test, match_mask);
+    }
+   }
+  }
+
+  return to;
+ }
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Split/Merge/Unmerge
+
+
+ public static String enclose(String str, String initStr, String endStr)
+ {
+  if (initStr==null && endStr==null) return str;
+  else
+  {
+   StringBuilder sb=new StringBuilder();
+
+   if (hasChars(initStr)) sb.append(initStr);
+   if (hasChars(str)) sb.append(str);
+   if (hasChars(endStr)) sb.append(endStr);
+
+   return sb.toString();
+  }
+ }
+
+
+
+ /**
+  *
+  * Executes 'enclose' for each string in the array then returns the modified array
+  *
+  * @param str
+  * @param initStr
+  * @param endStr
+  * @return
+  */
+ public static String[] enclose(String str[], String initStr, String endStr)
+ {
+  int t, len;
+
+  if (str!=null && (len=str.length)>0)
+   for (t=0;t<len;t++)
+    str[t]=enclose(str[t], initStr, endStr);
+
+  return str;
+ }
+
+
+
+ public static String mergeEnclosing(String str[], String initStr, String endStr)
+ {
+  return mergeEnclosing(str, 0, ArrayExtras.length(str), initStr, endStr);
+ }
+
+ public static String mergeEnclosing(String str[], int off, int len, String initStr, String endStr)
+ {
+  if (len>0)
+   return merge(enclose((String[])ArrayExtras.clone(str, off, len), initStr, endStr));
+  return null;
+ }
+
+
+ public static String merge(String... strs)
+ {
+  String res=null;
+
+  if (ArrayExtras.length(strs)>0)
+  {
+   StringBuilder sb=new StringBuilder();
+   for (String s : strs) sb.append(s);
+   res=sb.toString();
+  }
+
+  return res;
+ }
+
+
+ public static String[] unmerge(String str, char separator)
+ {
+  ArrayList<String> al=new ArrayList<>();
+  unmerge(str, separator, al, null);
+  return al.toArray(new String[al.size()]);
+ }
+
+
+ public static String[] unmerge(String str, char separator, ArrayList<String> myList)
+ {
+  unmerge(str, separator, myList, null);
+  return myList.toArray(new String[myList.size()]);
+ }
+
+
+ public static String[] unmerge(String str, char separator, String escapeString)
+ {
+  ArrayList<String> al=new ArrayList<>();
+  unmerge(str, separator, al, escapeString);
+  return al.toArray(new String[al.size()]);
+ }
+
+
+
+ public static ArrayList<String> unmerge(String str, char separator, ArrayList<String> myList, String escapeString)
+ {
+  if (hasChars(str))
+  {
+   int esLen=length(escapeString);
+   int ei, si=0, len=str.length();
+
+   do
+   {
+    ei=str.indexOf(separator, si);
+
+    if (ei>=0)
+    {
+     if (esLen>0 && str.indexOf(escapeString, si)==ei) si=ei+esLen;
+     else
+     {
+      if (ei==si)
+      {
+       if (ei>0) myList.add("");
+      } else myList.add(str.substring(si, ei));
+      si=ei+1;
+     }
+    }
+    else
+    {
+     if (si<len) myList.add(str.substring(si, len));
+    }
+   } while (ei>=0);
+  }
+  else
+  {
+   if (str!=null)
+   {
+    myList.add(str);
+   }
+  }
+
+  return myList;
+ }
+
+
+
+ // Ex. 1 : splitLast("1-2-3-4", '-') will return {"1-2-3", "4"}
+ // Ex. 2 : splitLast("4", '-') will return {null, "4"}
+ // Ex. 3 : splitLast(null, '-') will return {null, null}
+ public static String[] splitLast(String txt, char ch, String myArray[])
+ {
+  if (hasChars(txt))
+  {
+   int lio=txt.lastIndexOf(ch);
+
+   if (lio>=0)
+   {
+    myArray[0]=txt.substring(0, lio);
+    myArray[1]=txt.substring(lio+1);
+   }
+   else
+   {
+    myArray[0]=null;
+    myArray[1]=txt;
+   }
+  }
+  else
+  {
+   myArray[0]=null;
+   myArray[1]=null;
+  }
+
+  return myArray;
+ }
+
+
+ public static String[] splitLast(String txt, char ch)
+ {
+  return splitLast(txt, ch, new String[2]);
+ }
+
+
+
+
+
+ /**
+  *
+  * The strings returned in the array are extracted from 'str' in such a way that merging
+  * all the returned strings returns the original 'str' here passed but all the strings
+  * returned by cut are never longer than maxLen characters.
+  *
+  * @param str
+  * @param maxLen
+  * @return an array of strings.
+  */
+ public static String[] cut(String str, int maxLen)
+ {
+  return cutOnOccurrences(str, maxLen, null);
+ }
+
+ private static boolean canCut(int pos, char ch, int maxLen, String occurences)
+ {
+  boolean res=(pos>=maxLen);
+
+  if (res && occurences!=null)
+  {
+   res=(occurences.indexOf(ch)>=0);
+  }
+
+  return res;
+ }
+
+
+ // same me.as cut but tries to cut 'str' at the nearest occurence of
+ // one of the characters in 'occurences' to the maxLen character
+ // of each obtained string
+ public static String[] cutOnOccurrences(String str, int maxLen, String occurences)
+ {
+  String res[]=null;
+  boolean returnIt=false;
+
+  if (maxLen>0)
+  {
+   if (str!=null)
+   {
+    int t, len=str.length();
+    char ch;
+
+    if (len>0)
+    {
+     ArrayList<String> v=new ArrayList<>();
+     StringBuilder strBuff=new StringBuilder();
+     int yetAppended=0;
+
+     for (t=0;t<len;t++)
+     {
+      ch=str.charAt(t);
+      strBuff.append(ch);
+      yetAppended++;
+
+      if (canCut(yetAppended, ch, maxLen, occurences))
+      {
+       v.add(strBuff.toString());
+       strBuff=new StringBuilder();
+       yetAppended=0;
+      }
+     }
+
+     if (yetAppended>0)
+     {
+      v.add(strBuff.toString());
+      strBuff=new StringBuilder();
+      yetAppended=0;
+     }
+
+     res=ArrayExtras.toArrayOfStrings(v);
+
+    } else returnIt=true;
+   }
+  } else returnIt=true;
+
+  if (returnIt)
+  {
+   res=new String[1];
+   res[0]=str;
+  }
+
+  return res;
+ }
+
+
+
+
+
+
+
+
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Replace
+
+
+ /**
+  * Replaces the first substring of this string that matches the given <a
+  * href="../util/regex/Pattern.html#sum">regular expression</a> with the
+  * given replacement.
+  *
+  * <p> An invocation of this method of the form
+  * <i>str</i>{@code .replaceFirst(}<i>regex</i>{@code ,} <i>repl</i>{@code )}
+  * yields exactly the same result me.as the expression
+  *
+  * <blockquote>
+  * <code>
+  * {@link java.util.regex.Pattern}.{@link
+  * java.util.regex.Pattern# compile compile}(<i>regex</i>).{@link
+  * java.util.regex.Pattern#matcher(java.lang.CharSequence) matcher}(<i>str</i>).{@link
+  * java.util.regex.Matcher#replaceFirst replaceFirst}(<i>repl</i>)
+  * </code>
+  * </blockquote>
+  *
+  *<p>
+  * Note that backslashes ({@code \}) and dollar signs ({@code $}) in the
+  * replacement string may cause the results to be different than if it were
+  * being treated me.as a literal replacement string; see
+  * {@link java.util.regex.Matcher#replaceFirst}.
+  * Use {@link java.util.regex.Matcher#quoteReplacement} to suppress the special
+  * meaning of these characters, if desired.
+  *
+  * @param   regex
+  *          the regular expression to which this string is to be matched
+  * @param   replacement
+  *          the string to be substituted for the first match
+  *
+  * @return  The resulting {@code String}
+  *
+  * @throws PatternSyntaxException
+  *          if the regular expression's syntax is invalid
+  *
+  * @see java.util.regex.Pattern
+  *
+  * @since 1.4
+  * @spec JSR-51
+  */
+ public static String replaceFirst(String string, String regex, String replacement)
+ {
+  if (hasChars(string))
+     return string.replaceFirst(regex,  replacement);
+
+  return string;
+ }
+
+ /**
+  * Replaces each substring of this string that matches the given <a
+  * href="../util/regex/Pattern.html#sum">regular expression</a> with the
+  * given replacement.
+  *
+  * <p> An invocation of this method of the form
+  * <i>str</i>{@code .replaceAll(}<i>regex</i>{@code ,} <i>repl</i>{@code )}
+  * yields exactly the same result me.as the expression
+  *
+  * <blockquote>
+  * <code>
+  * {@link java.util.regex.Pattern}.{@link
+  * java.util.regex.Pattern# compile compile}(<i>regex</i>).{@link
+  * java.util.regex.Pattern#matcher(java.lang.CharSequence) matcher}(<i>str</i>).{@link
+  * java.util.regex.Matcher#replaceAll replaceAll}(<i>repl</i>)
+  * </code>
+  * </blockquote>
+  *
+  *<p>
+  * Note that backslashes ({@code \}) and dollar signs ({@code $}) in the
+  * replacement string may cause the results to be different than if it were
+  * being treated me.as a literal replacement string; see
+  * {@link java.util.regex.Matcher#replaceAll Matcher.replaceAll}.
+  * Use {@link java.util.regex.Matcher#quoteReplacement} to suppress the special
+  * meaning of these characters, if desired.
+  *
+  * @param   regex
+  *          the regular expression to which this string is to be matched
+  * @param   replacement
+  *          the string to be substituted for each match
+  *
+  * @return  The resulting {@code String}
+  *
+  * @throws  PatternSyntaxException
+  *          if the regular expression's syntax is invalid
+  *
+  * @see java.util.regex.Pattern
+  *
+  * @since 1.4
+  * @spec JSR-51
+  */
+ public static String replaceAll(String string, String regex, String replacement)
+ {
+  if (hasChars(string))
+     return string.replaceAll(regex,  replacement);
+
+  return string;
+ }
+
+ /**
+  * Replaces each substring of this string that matches the literal target
+  * sequence with the specified literal replacement sequence. The
+  * replacement proceeds from the beginning of the string to the end, for
+  * example, replacing "aa" with "b" in the string "aaa" will result in
+  * "ba" rather than "ab".
+  *
+  * @param  target The sequence of char values to be replaced
+  * @param  replacement The replacement sequence of char values
+  * @return  The resulting string
+  * @since 1.5
+  */
+ public static String replace(String string, CharSequence target, CharSequence replacement)
+ {
+  return replace(string, target, replacement, false);
+ }
+
+ public static String replace(String string, CharSequence target, CharSequence replacement, boolean onlyOneRound)
+ {
+  if (hasChars(string))
+  {
+   string=string.replace(target, stringOrEmpty(replacement));
+
+   if (!onlyOneRound)
+   {
+    String st=target.toString();
+
+    while (string.contains(st))
+     string=string.replace(target, replacement);
+   }
+  }
+
+  return string;
+ }
+
+
+
+ public static String replace(String str, String currentStrs[], String newStrs[])
+ {
+  return replace(str, currentStrs, newStrs, false);
+ }
+
+
+ public static String replace(String str, String currentStrs[], String newStrs[], boolean onlyOneRound)
+ {
+  int t, len=currentStrs.length;
+
+  for (t=0;t<len;t++)
+   str=replace(str, currentStrs[t], newStrs[t], onlyOneRound);
+
+  return str;
+ }
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Date/Calendar
+
+ public static final String speedDateFormat="HH.mm.ss dd/MMM/yyyy";
+ public static final SimpleDateFormat c2s2cDF=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss:SSSS");
+
+ public static final SimpleDateFormat hmDF=new SimpleDateFormat("HH:mm");
+ public static final SimpleDateFormat moreSimpleDF=new SimpleDateFormat("dd/MMM/yyyy HH:mm");
+ public static final SimpleDateFormat simpleDF=new SimpleDateFormat("dd/MMM/yyyy HH:mm:ss");
+ public static final SimpleDateFormat dmyDF=new SimpleDateFormat("dd_MM_yyyy");
+ public static final SimpleDateFormat dmyDF2=new SimpleDateFormat("dd/MM/yyyy");
+ public static final SimpleDateFormat dmyDF3=new SimpleDateFormat("EEEE dd/MM/yyyy");
+ public static final SimpleDateFormat dmyDF4=new SimpleDateFormat("EEEE dd/MM/yyyy HH:mm");
+ public static final SimpleDateFormat dmyDF5=new SimpleDateFormat("dd/MM/yyyy HH:mm");
+ public static final SimpleDateFormat dmyDF6=new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+ public static final SimpleDateFormat RSS_pubDate=new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH);
+
+ public static final SimpleDateFormat httpTimeFormat=new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+
+
+
+ public static String getLocalizedMonthName(int month)
+ {
+  return getLocalizedMonthName(month, Locale.getDefault());
+ }
+
+
+ public static String getLocalizedMonthName(int month, String language)
+ {
+  return getLocalizedMonthName(month, new Locale(language));
+ }
+
+
+
+ public static String getLocalizedMonthName(int month, Locale locale)
+ {
+  Calendar monday=
+   CalendarExtras.setHourMinutesSecondsAndMillis(CalendarExtras.newDay(2011, 0, 14), 1, 0, 0, 0);
+
+  //  System.out.println(speedDateToString(monday));
+
+  monday.add(Calendar.MONTH, month);
+
+  SimpleDateFormat dowDF=new SimpleDateFormat("MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM", locale);
+  String res=dowDF.format(monday.getTime());
+
+  return res;
+ }
+
+
+
+
+ public static String getLocalizedDayOfWeek(int dayOfWeek)
+ {
+  return getLocalizedDayOfWeek(dayOfWeek, Locale.getDefault());
+ }
+
+
+ public static String getLocalizedDayOfWeek(int dayOfWeek, String language)
+ {
+  return getLocalizedDayOfWeek(dayOfWeek, new Locale(language));
+ }
+
+
+
+ /**
+  *
+  *
+  * @param dayOfWeek  0 = monday
+  * @param locale
+  * @return
+  */
+ public static String getLocalizedDayOfWeek(int dayOfWeek, Locale locale)
+ {
+  Calendar monday=
+   CalendarExtras.setHourMinutesSecondsAndMillis(CalendarExtras.newDay(2011, 2, 14), 1, 0, 0, 0);
+
+//  System.out.println(speedDateToString(monday));
+
+  monday.add(Calendar.DAY_OF_YEAR, dayOfWeek);
+
+  SimpleDateFormat dowDF=new SimpleDateFormat("EEEEEEEEEEEEEEEEEEEEEEEEEEEEE", locale);
+  String res=dowDF.format(monday.getTime());
+
+  return res;
+ }
+
+
+
+ public static String speedDateToString(Calendar d, String format)
+ {
+  return speedDateToString(d.getTime(), format);
+ }
+
+ public static String speedDateToString(Calendar d)
+ {
+  return speedDateToString(d.getTime());
+ }
+
+ public static Calendar string2Calendar(String time, SimpleDateFormat sdf)
+ {
+  return string2Calendar(time, sdf, false);
+ }
+
+
+ public static Calendar string2Calendar(String time, SimpleDateFormat sdf, boolean prevDayOnNoExists)
+ {
+  Calendar res=null;
+
+  if (sdf!=null && isNotBlank(time))
+  {
+   synchronized (sdf)
+   {
+    try
+    {
+     res=Calendar.getInstance();
+     res.setTime(sdf.parse(time));
+
+     if (prevDayOnNoExists)
+     {
+      String verif=calendar2String(res, sdf);
+      if (!areEqual(verif, time))
+      {
+       res.add(Calendar.DAY_OF_YEAR, -1);
+      }
+     }
+    }
+    catch (Throwable tr)
+    {
+     res=null;
+    }
+   }
+  }
+
+  return res;
+ }
+
+ public static Calendar string2Calendar(String time)
+ {
+  return string2Calendar(time, c2s2cDF);
+ }
+
+
+ public static String calendar2String(Calendar time, String dateFormat)
+ {
+  return calendar2String(time, new SimpleDateFormat(dateFormat));
+ }
+
+
+ public static String calendar2String(Calendar time, SimpleDateFormat sdf)
+ {
+  String res=null;
+
+  if (time!=null && sdf!=null)
+  {
+   synchronized (sdf)
+   {
+    synchronized (time)
+    {
+     res=sdf.format(time.getTime());
+    }
+   }
+  }
+
+  return res;
+ }
+
+
+ public static String calendar2String(Calendar time)
+ {
+  return calendar2String(time, c2s2cDF);
+ }
+
+
+
+
+
+
+
+
+ public static String speedDateToString(Date dt, String format)
+ {
+  SimpleDateFormat formatter=new SimpleDateFormat(format, Locale.ENGLISH);
+  return formatter.format(dt);
+ }
+
+
+ public static String speedDateToString(Date dt)
+ {
+  return speedDateToString(dt, speedDateFormat);
+ }
+
+
+
+ public static String speedNowToString()
+ {
+  return speedDateToString(Calendar.getInstance().getTime());
+ }
+
+
+
+
+ public static Date speedStringToDate(String dt)
+ {
+  Date res=null;
+
+  try
+  {
+   SimpleDateFormat formatter=new SimpleDateFormat(speedDateFormat);
+   res=formatter.parse(dt);
+  } catch (Throwable tr){}
+
+  return res;
+ }
+
+
+ public static Date speedStringToDate(String dt, String format)
+ {
+  Date res=null;
+
+  try
+  {
+   SimpleDateFormat formatter=new SimpleDateFormat(format);
+   res=formatter.parse(dt);
+  } catch (Throwable tr){}
+
+  return res;
+ }
+
+
+ public static String getRelevantLiteralTimeAmount(long millis)
+ {
+  return getRelevantLiteralTimeAmount(millis, 3);
+ }
+
+ public static String getRelevantLiteralTimeAmount(long millis, int maxElems)
+ {
+  int sm[]=TimeCounter.splitMillis(millis);
+  int years=sm[0];
+  int months=sm[1];
+  int weeks=sm[2];
+  int days=sm[3];
+  int hours=sm[4];
+  int minutes=sm[5];
+  int seconds=sm[6];
+  int milliseconds=sm[7];
+
+  StringBuilder sb=new StringBuilder();
+  int added=0;
+
+  if ((added>0 && added<maxElems) || (added==0 &&years>0)) {added++;sb.append(years);sb.append("y ");}
+  if ((added>0 && added<maxElems) || (added==0 &&months>0)) {added++;sb.append(months);sb.append("Mo ");}
+  if ((added>0 && added<maxElems) || (added==0 &&weeks>0)) {added++;sb.append(weeks);sb.append("w ");}
+  if ((added>0 && added<maxElems) || (added==0 &&days>0)) {added++;sb.append(days);sb.append("d ");}
+  if ((added>0 && added<maxElems) || (added==0 &&hours>0)) {added++;sb.append(hours);sb.append("h ");}
+  if ((added>0 && added<maxElems) || (added==0 &&minutes>0)) {added++;sb.append(minutes);sb.append("m ");}
+  if ((added>0 && added<maxElems) || (added==0 &&seconds>0)) {added++;sb.append(seconds);sb.append("s ");}
+  if (added<maxElems) {sb.append(milliseconds);sb.append("ms ");}
+
+  return sb.toString();
+ }
+
+
+ public static String getLiteralTimeAmount(long millis, boolean asShortestAsPossible)
+ {
+  int sm[]=TimeCounter.splitMillis(millis);
+  int years=sm[0];
+  int months=sm[1];
+  int weeks=sm[2];
+  int days=sm[3];
+  int hours=sm[4];
+  int minutes=sm[5];
+  int seconds=sm[6];
+  int milliseconds=sm[7];
+
+  StringBuilder sb=new StringBuilder();
+  boolean started=false;
+
+  if (years>0 || !asShortestAsPossible) {started=true;sb.append(years);sb.append("y ");}
+  if (started || months>0) {started=true;sb.append(months);sb.append("Mo ");}
+  if (started || weeks>0) {started=true;sb.append(weeks);sb.append("w ");}
+  if (started || days>0) {started=true;sb.append(days);sb.append("d ");}
+  if (started || hours>0) {started=true;sb.append(hours);sb.append("h ");}
+  if (started || minutes>0) {started=true;sb.append(minutes);sb.append("m ");}
+  if (started || seconds>0) {sb.append(seconds);sb.append("s ");}
+
+  sb.append(milliseconds);sb.append("ms");
+
+  return sb.toString();
+ }
+
+
+ public static String getLiteralTimeAmount(long millis)
+ {
+  return getLiteralTimeAmount(millis, true);
+ }
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Generate random and unique strings
+
+
+ public static final String quickNotLettersNotDigits=" “”’!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿×".intern();
+ public static final String unambiguousChars="2367abcdefhkpqrstwxyzACEFGHJKLPRSTWXYZ";
+ public static final String hexChars="0123456789abcdef".intern();
+ public static final String digits="0123456789".intern();
+ public static final String lowerLetters="abcdefghijklmnopqrstuvwxyz".intern();
+ public static final String upperLetters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".intern();
+ public static final String letters=(upperLetters+lowerLetters).intern();
+ public static final String lettersDigits=(letters+digits).intern();
+ public static final String otherCharsOkForPasswords="!#%&()\\/*+-.:;<=>?@[]{},".intern();
+ public static final String lettersDigitsUnderscore=(lettersDigits+"_").intern();
+
+ public static final String charsOkForPasswords=(lettersDigitsUnderscore+otherCharsOkForPasswords).intern();
+ public static final String fileSystemSecureSymbols=(digits+lowerLetters).intern();
+
+ public static final String okCharsForIdentifiers;
+ static
+ {
+  int t, len=257;
+  char ch;
+  StringBuilder sb=new StringBuilder();
+
+  for (t=0;t<len;t++)
+  {
+   ch=(char)t;
+   if (Character.isUnicodeIdentifierPart(ch))
+   {
+    String tmp=String.valueOf(ch);
+    String deac=deAccentize(tmp);
+
+    if (lettersDigitsUnderscore.indexOf(ch)>=0 ||
+        (length(deac)==1 &&
+         lettersDigitsUnderscore.indexOf(deac.charAt(0))>=0)) sb.append(ch);
+   }
+  }
+
+  okCharsForIdentifiers=sb.toString();
+ }
+
+
+ /**
+  *
+  * Seems speed enough: less than 3 seconds for 4 milion calls!!!
+  *
+  */
+ public static String getQuickUniqueKey(Object... keys)
+ {
+  StringBuilder sb=new StringBuilder();
+  int t, len=keys.length;
+
+  for (t=0;t<len;t++)
+  {
+   if (keys[t]!=null)
+   {
+    if (keys[t] instanceof Calendar)
+    {
+     sb.append("millis=");
+     sb.append(String.valueOf(((Calendar)keys[t]).getTimeInMillis()));
+    }
+    else
+    {
+     if (isArray(keys[t]))
+     {
+      sb.append("[").append(getQuickUniqueKey((Object[])keys[t])).append("]");
+     } else sb.append(keys[t].toString());
+    }
+
+    sb.append(":");
+   } else sb.append("!:");
+  }
+
+  return sb.toString();
+ }
+
+ public static String getQuickHashedUniqueKey(Object... keys)
+ {
+  String res=getQuickUniqueKey(keys);
+  int hc=res.hashCode();
+
+  if (hc<0)
+   res="n"+((-1)*hc);
+  else
+   res="p"+hc;
+
+  return res;
+ }
+
+
+
+ public static String generateRandomString(int length)
+ {
+  StringBuilder res=new StringBuilder();
+  int lduLen=lettersDigits.length()-1;
+
+  do
+  {
+   int idx=intRandom(0, lduLen);
+   res.append(lettersDigits.charAt(idx));
+
+  } while (res.length()<length);
+
+  return res.toString();
+ }
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Remove/Discard
+
+ public static String[] removeNullAndEmptyAndBlank(String str[])
+ {
+  String res[]=null;
+
+  if (str!=null)
+  {
+   int t, len=str.length;
+
+   if (len>0)
+   {
+    ArrayList v=new ArrayList();
+
+    for (t=0;t<len;t++) if (isNotBlank(str[t])) v.add(str[t]);
+
+    res=(String[])v.toArray(new String[v.size()]);
+   }
+  }
+
+  return res;
+ }
+
+
+ public static String[] removeNullAndEmpty(String str[])
+ {
+  String res[]=null;
+
+  if (str!=null)
+  {
+   int t, len=str.length;
+
+   if (len>0)
+   {
+    String tmpStr;
+    ArrayList al=new ArrayList();
+
+    for (t=0;t<len;t++)
+    {
+     tmpStr=str[t];
+     if (tmpStr!=null)
+     {
+      if (tmpStr.length()>0)
+      {
+       al.add(tmpStr);
+      }
+     }
+    }
+
+    res=(String[])al.toArray(new String[al.size()]);
+   }
+  }
+
+  return res;
+ }
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Matching with both Glob and RegEx
+
+
+ /**
+  * Converts a standard POSIX Shell globbing pattern into a regular expression
+  * pattern. The result can be used with the standard {@link java.util.regex} API to
+  * recognize strings which match the glob pattern.
+  * <p/>
+  * See also, the POSIX Shell language:
+  * http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_13_01
+  *
+  * @param pattern A glob pattern.
+  * @return A regex pattern to recognize the given glob pattern.
+  */
+ public static String globToRegex(String pattern)
+ {
+  StringBuilder sb=new StringBuilder(pattern.length());
+  int inGroup=0;
+  int inClass=0;
+  int firstIndexInClass=-1;
+  char[] arr=pattern.toCharArray();
+  for (int i=0;i<arr.length;i++)
+  {
+   char ch=arr[i];
+   switch (ch)
+   {
+    case '\\':
+     if (++i >= arr.length)
+     {
+      sb.append("\\\\");
+     }
+     else
+     {
+      char next=arr[i];
+      switch (next)
+      {
+       case ',':
+        // escape not needed
+        break;
+       case 'Q':
+       case 'E':
+        // extra escape needed
+//        sb.append('\\');
+       default:
+        sb.append("\\\\");
+      }
+      sb.append(next);
+     }
+     break;
+    case '*':
+     if (inClass==0)
+      sb.append(".*");
+     else
+      sb.append('*');
+     break;
+    case '?':
+     if (inClass==0)
+      sb.append('.');
+     else
+      sb.append('?');
+     break;
+    case '[':
+     inClass++;
+     firstIndexInClass=i+1;
+     sb.append('[');
+     break;
+    case ']':
+     inClass--;
+     sb.append(']');
+     break;
+    case '.':
+    case '(':
+    case ')':
+    case '+':
+    case '|':
+    case '^':
+    case '$':
+    case '@':
+    case '%':
+     if (inClass==0 || (firstIndexInClass==i && ch=='^'))
+     { sb.append('\\'); }
+     sb.append(ch);
+     break;
+    case '!':
+     if (firstIndexInClass==i)
+      sb.append('^');
+     else
+      sb.append('!');
+     break;
+    case '{':
+     inGroup++;
+     sb.append('(');
+     break;
+    case '}':
+     inGroup--;
+     sb.append(')');
+     break;
+    case ',':
+     if (inGroup>0)
+      sb.append('|');
+     else
+      sb.append(',');
+     break;
+    default:
+     sb.append(ch);
+   }
+  }
+
+  return sb.toString();
+ }
+
+
+/*
+ public static void main(String args[])
+ {
+  String baudo="c:\\disk\\E\\pippo\\Q\\baudo";
+  String reg=globToRegex("c:\\disk\\E\\pippo\\Q*");
+
+  boolean res=baudo.matches(reg);
+
+  logOut.println(res);
+ }
+*/
+
+
+
+
+
+
+
+ /**
+  * doTheyMatch:
+  * doTheyMatch compares 'test' with 'match_mask' and returns true if they
+  * matches.
+  * 'match_mask' should be a Glob Pattern
+  *
+  *
+  */
+ public static boolean doTheyMatch(String test, String match_mask, boolean caseSensitive)
+ {
+  boolean res=false;
+  char jolly='*';
+  char charRep='?';
+
+  if (!hasChars(match_mask)) return true;
+
+  if (areEqual(match_mask, String.valueOf(jolly))) return true;
+
+  if (containsOnlyThoseChars(match_mask, String.valueOf(charRep)))
+  {
+   return (length(test)==length(match_mask));
+  }
+
+  String regexPattern=globToRegex(match_mask);
+  int flags=Pattern.MULTILINE;
+
+  if (!caseSensitive) flags&=Pattern.CASE_INSENSITIVE;
+
+  return doTheyRegexMatch(test, regexPattern, flags);
+ }
+
+
+
+ public static boolean doTheyMatch(String test, String match_mask)
+ {
+  return doTheyMatch(test, match_mask, true);
+ }
+
+
+
+ /**
+  * WARNING: passing a null (or empty) array for match_masks this method returns 'true'
+  */
+ public static boolean doTheyMatch(String test, String match_masks[], boolean caseSensitive)
+ {
+  if (ArrayExtras.length(match_masks)==0) return true;
+  return (getWhichMaskMatches(test, match_masks, caseSensitive)>=0);
+ }
+
+
+ public static int getWhichMaskMatches(String test, String match_masks[], boolean caseSensitive)
+ {
+  int t, len=ArrayExtras.length(match_masks);
+  int res=-1;
+
+  for (t=0;t<len && res==-1;t++)
+  {
+   if (doTheyMatch(test, match_masks[t], caseSensitive))
+   {
+    res=t;
+   }
+  }
+
+  return res;
+ }
+
+
+
+ public static boolean doTheyRegexMatch(String stringTolookInside, String regexPattern)
+ {
+  return doTheyRegexMatch(stringTolookInside, regexPattern, Pattern.MULTILINE);
+ }
+
+ public static boolean doTheyRegexMatch(String stringTolookInside, String regexPattern, int regexFlags)
+ {
+  return (getFirstRegexMatch(stringTolookInside, regexPattern, regexFlags)!=null);
+ }
+
+ public static String getFirstRegexMatch(String stringTolookInside, String regexPattern)
+ {
+  return getFirstRegexMatch(stringTolookInside, regexPattern, Pattern.MULTILINE);
+ }
+
+ public static String getFirstRegexMatch(String stringTolookInside, String regexPattern, int regexFlags)
+ {
+  String res=null;
+  Pattern r=Pattern.compile(regexPattern, regexFlags);
+
+  // Now create matcher object.
+  Matcher m=r.matcher(stringTolookInside);
+
+  if (m.find())
+  {
+   res=m.group(0);
+  }
+
+  return res;
+ }
+
+ public static StringMatch getFirstRegexMatchEx(String stringTolookInside, String regexPattern)
+ {
+  StringMatch res=null;
+  Pattern r=Pattern.compile(regexPattern, Pattern.MULTILINE);
+
+  // Now create matcher object.
+  Matcher m=r.matcher(stringTolookInside);
+
+  if (m.find())
+  {
+   res=new StringMatch();
+   res.source=stringTolookInside;
+   res.matchStart=m.start(0);
+   res.matchEnd=m.end(0);
+   res.match=stringTolookInside.substring(res.matchStart, res.matchEnd);
+  }
+
+  return res;
+ }
+
+
+ public static List<String> getRegexMatches(String stringTolookInside, String regexPattern)
+ {
+  List<String> res=new ArrayList<>();
+  Pattern r=Pattern.compile(regexPattern, Pattern.MULTILINE);
+
+  // Now create matcher object.
+  Matcher m=r.matcher(stringTolookInside);
+
+  while (m.find())
+  {
+   res.add(stringTolookInside.substring(m.start(), m.end()));
+  }
+
+  return res;
+ }
+
+
+ public static List<StringMatch> getRegexMatchesEx(String stringTolookInside, String regexPattern)
+ {
+  return getRegexMatchesEx(stringTolookInside, regexPattern, null);
+ }
+
+ public static List<StringMatch> getRegexMatchesEx(String stringTolookInside, String regexPattern, List<StringMatch> addToThis)
+ {
+  List<StringMatch> res=((addToThis!=null) ? addToThis:new ArrayList<>());
+  Pattern r=Pattern.compile(regexPattern, Pattern.MULTILINE);
+
+  // Now create matcher object.
+  Matcher m=r.matcher(stringTolookInside);
+
+  while (m.find())
+  {
+   StringMatch sm=new StringMatch();
+   sm.source=stringTolookInside;
+   sm.matchStart=m.start();
+   sm.matchEnd=m.end();
+   sm.match=stringTolookInside.substring(sm.matchStart, sm.matchEnd);
+   res.add(sm);
+  }
+
+  return res;
+ }
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Clipboard
+
+ public static String getFromSystemClipboard()
+ {
+  String res;
+
+  try
+  {
+   Clipboard clipb=Toolkit.getDefaultToolkit().getSystemClipboard();
+   Transferable tr=clipb.getContents(null);
+   res=tr.getTransferData(DataFlavor.stringFlavor).toString();
+  }
+  catch (Throwable tr)
+  {
+   tr.printStackTrace();
+   res=null;
+  }
+
+  return res;
+ }
+
+
+ public static void putInSystemClipboard(final String testo)
+ {
+  Clipboard clipb=Toolkit.getDefaultToolkit().getSystemClipboard();
+
+  clipb.setContents
+  (
+   new Transferable()
+   {
+    DataFlavor df[]=new DataFlavor[]{DataFlavor.stringFlavor};
+
+    public DataFlavor[] getTransferDataFlavors()
+    {
+     return df;
+    }
+
+    public boolean isDataFlavorSupported(DataFlavor flavor)
+    {
+     return flavor.equals(DataFlavor.stringFlavor);
+    }
+
+    public Object getTransferData(DataFlavor flavor)
+    {
+     return testo;
+    }
+   },
+   new ClipboardOwner(){public void lostOwnership(Clipboard clipboard, Transferable contents){}}
+  );
+ }
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // checking
+
+
+ public static boolean endsWith(String test, String ends)
+ {
+  return (hasChars(test) && hasChars(ends) && test.endsWith(ends));
+ }
+
+
+ public static boolean endsWith(String test, String match_mask, char charRep, boolean caseSensitive)
+ {
+  boolean res;
+
+  try
+  {
+   res=(test.length()-match_mask.length()==lastIndexOf(test, match_mask, charRep, caseSensitive));
+  } catch (Throwable tr){res=false;}
+
+  return res;
+ }
+
+ public static boolean startsWith(String test, String starts)
+ {
+  return (hasChars(test) && hasChars(starts) && test.startsWith(starts));
+ }
+
+ public static boolean startsWith(String test, String match_mask, char charRep, boolean caseSensitive)
+ {
+  return (indexOf(test, match_mask, charRep, caseSensitive)==0);
+ }
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // normalizing
+
+
+ public static Integer integerOrNull(CharSequence str)
+ {
+  Integer res;
+
+  try
+  {
+   res=Integer.parseInt(str.toString());
+  }
+  catch (Throwable tr)
+  {
+   res=null;
+  }
+
+  return res;
+ }
+
+
+
+ public static String nonBlankOrNull(CharSequence s)
+ {
+  if (isNotBlank(s)) return s.toString();
+  else return null;
+ }
+
+ public static String stringOrEmpty(CharSequence s)
+ {
+  if (hasChars(s)) return s.toString();
+  else return "";
+ }
+
+ public static String stringOrThrow(CharSequence s)
+ {
+  if (hasChars(s)) return s.toString();
+  throw new RuntimeException();
+ }
+
+
+ public static String monBlankOrThat(CharSequence s, CharSequence that)
+ {
+  if (isNotBlank(s)) return s.toString();
+  else return (that==null ? null : that.toString());
+ }
+
+ public static String stringOrThat(CharSequence s, CharSequence that)
+ {
+  if (hasChars(s)) return s.toString();
+  else return (that==null ? null : that.toString());
+ }
+
+ public static String stringOrNull(CharSequence s)
+ {
+  return stringOrThat(s, null);
+ }
+
+
+
+
+ public static String[] stringsOrThose(String s[], String those[])
+ {
+  int t, len=ArrayExtras.length(s);
+
+  for (t=0;t<len;t++)
+  {
+   if (hasChars(s[t])) return s;
+  }
+
+  return those;
+ }
+
+
+ public static String[] stringsOrNull(String s[])
+ {
+  return stringsOrThose(s, null);
+ }
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Conversions
+
+
+ private static final String _illegal_conv_arg="%f cuold not convert to '%t' the supplied 'str' (%s)";
+ private static final String _illegal_conv_arg_phs[]=new String[]{"%f", "%t", "%s"};
+ private static final String _bad_type_="StringUtil.$ called with invalid value type";
+
+
+
+ public static Integer toIntOrNull(String str)
+ {
+  Integer res;
+
+  try
+  {
+   res=Integer.parseInt(betterTrim(str));
+  }
+  catch (Throwable tr)
+  {
+   res=null;
+  }
+
+  return res;
+ }
+
+
+
+ public static int extractInt(String str, int defaultValue)
+ {
+  int res;
+
+  try
+  {
+   res=extractInt(str);
+  }
+  catch (Throwable tr)
+  {
+   res=defaultValue;
+  }
+
+  return res;
+ }
+
+
+ public static int extractInt(String str) throws NumberFormatException
+ {
+  int res;
+
+  try
+  {
+   res=Integer.parseInt(str);
+  }
+  catch (Throwable ignore)
+  {
+   try
+   {
+    StringBuilder sb=new StringBuilder();
+    char ch;
+    int t, len=length(str);
+
+    for (t=0;t<len;t++)
+    {
+     ch=str.charAt(t);
+     if (t==0 && ch=='-' || ch=='+') sb.append(ch);
+     else
+     {
+      if (Character.isDigit(ch)) sb.append(ch);
+      else break;
+     }
+    }
+
+    res=Integer.parseInt(sb.toString());
+   }
+   catch (Throwable tr)
+   {
+    throw new NumberFormatException("cannot extract an int from '"+str+"'");
+   }
+  }
+
+  return res;
+ }
+
+
+ public static Object toType(String value, Class<?> type)
+ {
+  Object res;
+
+  switch (ArrayExtras.indexOf(Types.primitivesAndAlmostClasses, 0, type))
+  {
+   case  0 /* Byte.TYPE       */:
+   case  1 /* Byte.class      */:res=toByte(value);break;
+   case  2 /* Short.TYPE      */:
+   case  3 /* Short.class     */:res=toShort(value);break;
+   case  4 /* Integer.TYPE    */:
+   case  5 /* Integer.class   */:res=toInt(value);break;
+   case  6 /* Long.TYPE       */:
+   case  7 /* Long.class      */:res=toLong(value);break;
+   case  8 /* Character.TYPE  */:
+   case  9 /* Character.class */:res=toChar(value);break;
+   case 10 /* Float.TYPE      */:
+   case 11 /* Float.class     */:res=toFloat(value);break;
+   case 12 /* Double.TYPE     */:
+   case 13 /* Double.class    */:res=toDouble(value);break;
+   case 14 /* Boolean.TYPE    */:
+   case 15 /* Boolean.class   */:res=toBoolean(value);break;
+   case 16 /* String.class    */:res=value;break;
+
+
+/*
+   case 1 / *Byte.TYPE      * /               :res=toByte(value);break;
+   case 2 / *Short.TYPE     * /               :res=toShort(value);break;
+   case 3 / *Integer.TYPE   * /               :res=toInt(value);break;
+   case 4 / *Long.TYPE      * /               :res=toLong(value);break;
+   case 5 / *Character.TYPE * /               :res=toChar(value);break;
+   case 6 / *Float.TYPE     * /               :res=toFloat(value);break;
+   case 7 / *Double.TYPE    * /               :res=toDouble(value);break;
+   case 8 / *Boolean.TYPE   * /               :res=toBoolean(value);break;
+   case 9 / *String.class   * /               :res=value;break;
+*/
+   default:
+   {
+    if (type.isEnum())
+    {
+     res=Enum.valueOf((Class<Enum>)type, (String)value);
+    }
+    else
+    {
+     throw new RuntimeException("Cannot convert!");
+    }
+   }
+  }
+
+  return res;
+ }
+
+
+ public static byte toByte(String str) throws NumberFormatException
+ {
+  return Byte.parseByte(betterTrim(str));
+ }
+
+ public static short toShort(String str) throws NumberFormatException
+ {
+  return Short.parseShort(betterTrim(str));
+ }
+
+ public static int toInt(String str) throws NumberFormatException
+ {
+  return Integer.parseInt(betterTrim(str));
+ }
+
+ public static long toLong(String str) throws NumberFormatException
+ {
+  return Long.parseLong(betterTrim(str));
+ }
+
+ public static char toChar(String str) throws IllegalArgumentException
+ {
+  int v=toInt(str);
+
+  if (v<((int)Character.MIN_VALUE) || v>((int)Character.MAX_VALUE))
+  {
+   throw new IllegalArgumentException(
+           replace(_illegal_conv_arg, _illegal_conv_arg_phs, new String[]{"toChar(String str)", "char", str}));
+  } else return (char)v;
+ }
+
+ public static float toFloat(String str) throws NumberFormatException
+ {
+  return Float.parseFloat(betterTrim(str));
+ }
+
+ public static double toDouble(String str) throws NumberFormatException
+ {
+  return MathExtras.toDouble(betterTrim(str));
+  //return Double.parseDouble(str);
+ }
+
+ public static boolean toBoolean(String str) throws IllegalArgumentException
+ {
+  if (isBlank(str)) throw new IllegalArgumentException("argumetn isBlank!");
+
+  boolean res=false;
+  str=betterTrim(str);
+
+  if (isNotBlank(str))
+  {
+   try
+   {
+    str=str.trim();
+    if (select(considerableTrue, str, SELECT_CASE_INSENSITIVE)>=0)
+    {
+     res=true;
+    }
+    else
+    {
+     if (select(considerableFalse, str, SELECT_CASE_INSENSITIVE)>=0)
+     {
+      res=false;
+     }
+     else
+     {
+      res=(toInt(str)!=0);
+     }
+    }
+   }
+   catch (Throwable tr)
+   {
+    throw new IllegalArgumentException(
+            replace(_illegal_conv_arg, _illegal_conv_arg_phs, new String[]{"toBoolean(String str)", "boolean", str}));
+   }
+  }
+
+  return res;
+ }
+
+
+
+
+ public static byte[] toBytes(String str[]) throws NumberFormatException
+ {
+  byte res[]=null;
+  int t, len=ArrayExtras.length(str);
+
+  if (len>0)
+  {
+   res=new byte[len];
+   for (t=0;t<len;t++){res[t]=toByte(str[t]);}
+  }
+
+  return res;
+ }
+
+
+ public static short[] toShorts(String str[]) throws NumberFormatException
+ {
+  short res[]=null;
+  int t, len=ArrayExtras.length(str);
+
+  if (len>0)
+  {
+   res=new short[len];
+   for (t=0;t<len;t++){res[t]=toShort(str[t]);}
+  }
+
+  return res;
+ }
+
+
+ public static int[] toInts(String str[]) throws NumberFormatException
+ {
+  int res[]=null;
+  int t, len=ArrayExtras.length(str);
+
+  if (len>0)
+  {
+   res=new int[len];
+   for (t=0;t<len;t++){res[t]=toInt(str[t]);}
+  }
+
+  return res;
+ }
+
+
+ public static long[] toLongs(String str[]) throws NumberFormatException
+ {
+  long res[]=null;
+  int t, len=ArrayExtras.length(str);
+
+  if (len>0)
+  {
+   res=new long[len];
+   for (t=0;t<len;t++){res[t]=toLong(str[t]);}
+  }
+
+  return res;
+ }
+
+
+ public static char[] toChars(String str[]) throws IllegalArgumentException
+ {
+  char res[]=null;
+  int t, len=ArrayExtras.length(str);
+
+  if (len>0)
+  {
+   res=new char[len];
+   for (t=0;t<len;t++){res[t]=toChar(str[t]);}
+  }
+
+  return res;
+ }
+
+
+ public static float[] toFloats(String str[]) throws NumberFormatException
+ {
+  float res[]=null;
+  int t, len=ArrayExtras.length(str);
+
+  if (len>0)
+  {
+   res=new float[len];
+   for (t=0;t<len;t++){res[t]=toFloat(str[t]);}
+  }
+
+  return res;
+ }
+
+
+ public static double[] toDoubles(String str[]) throws NumberFormatException
+ {
+  double res[]=null;
+  int t, len=ArrayExtras.length(str);
+
+  if (len>0)
+  {
+   res=new double[len];
+   for (t=0;t<len;t++){res[t]=MathExtras.toDouble(str[t]);}
+  }
+
+  return res;
+ }
+
+ public static double[] toDoubles(ArrayList<String> str) throws NumberFormatException
+ {
+  double res[]=null;
+  int t, len=ArrayExtras.length(str);
+
+  if (len>0)
+  {
+   res=new double[len];
+   for (t=0;t<len;t++){res[t]=MathExtras.toDouble(str.get(t));}
+  }
+
+  return res;
+ }
+
+
+
+ public static double[] speedToDoubles(ArrayList<String> str) throws NumberFormatException
+ {
+  double res[]=null;
+  int t, len=ArrayExtras.length(str);
+
+  if (len>0)
+  {
+   res=new double[len];
+   for (t=0;t<len;t++){res[t]=Double.parseDouble(str.get(t));}
+  }
+
+  return res;
+ }
+
+
+
+
+ public static boolean[] toBooleans(String str[]) throws IllegalArgumentException
+ {
+  boolean res[]=null;
+  int t, len=ArrayExtras.length(str);
+
+  if (len>0)
+  {
+   res=new boolean[len];
+   for (t=0;t<len;t++){res[t]=toBoolean(str[t]);}
+  }
+
+  return res;
+ }
+
+
+
+
+
+ public static boolean isByte(String str)
+ {
+  try
+  {
+   toByte(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+
+ public static boolean isShort(String str)
+ {
+  try
+  {
+   toShort(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+
+ public static boolean isInt(String str)
+ {
+  try
+  {
+   toInt(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+
+ public static boolean isLong(String str)
+ {
+  try
+  {
+   toLong(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+
+ public static boolean isChar(String str)
+ {
+  try
+  {
+   toChar(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+
+ public static boolean isFloat(String str)
+ {
+  try
+  {
+   toFloat(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+
+ public static boolean isDouble(String str)
+ {
+  try
+  {
+   toDouble(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+
+ public static boolean isBoolean(String str)
+ {
+  try
+  {
+   toBoolean(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+
+
+ public static boolean areBytes(String str[])
+ {
+  try
+  {
+   toBytes(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+ public static boolean areShorts(String str[])
+ {
+  try
+  {
+   toShorts(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+ public static boolean areInts(String str[])
+ {
+  try
+  {
+   toInts(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+ public static boolean areLongs(String str[])
+ {
+  try
+  {
+   toLongs(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+ public static boolean areChars(String str[])
+ {
+  try
+  {
+   toChars(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+ public static boolean areFloats(String str[])
+ {
+  try
+  {
+   toFloats(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+ public static boolean areDoubles(String str[])
+ {
+  try
+  {
+   toDoubles(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+ public static boolean areBooleans(String str[])
+ {
+  try
+  {
+   toBooleans(str);
+   return true;
+  }
+  catch (Throwable tr)
+  {
+   return false;
+  }
+ }
+
+
+
+
+
+ private static String _getStringValue(Object value, int idx)
+ {
+  String res;
+
+  switch (ArrayExtras.select(Types.classes, value.getClass()))
+  {
+   case 11 /* byte[].class    */:res=String.valueOf(((byte[])value)[idx]);break;
+   case 12 /* short[].class   */:res=String.valueOf(((short[])value)[idx]);break;
+   case 13 /* int[].class     */:res=String.valueOf(((int[])value)[idx]);break;
+   case 14 /* long[].class    */:res=String.valueOf(((long[])value)[idx]);break;
+   case 15 /* char[].class    */:res=String.valueOf(((char[])value)[idx]);break;
+   case 16 /* float[].class   */:res=String.valueOf(((float[])value)[idx]);break;
+   case 17 /* double[].class  */:res=String.valueOf(((double[])value)[idx]);break;
+   case 18 /* boolean[].class */:res=String.valueOf(((boolean[])value)[idx]);break;
+   default:throw new RuntimeException(replace(_bad_type_, "$", "_getStringValue"));
+  }
+
+  return res;
+ }
+
+ public static String primitiveArraytoString(Object value)
+ {
+  return primitiveArraytoString(value, ",");
+ }
+
+ public static String primitiveArraytoString(Object value, String separator)
+ {
+  String res=null;
+  int t, len=ArrayExtras.length(value);
+
+  if (len>0)
+  {
+   StringBuilder sb=new StringBuilder();
+
+   for (t=0;t<len;t++)
+   {
+    if (t>0) sb.append(separator);
+    sb.append(_getStringValue(value, t));
+   }
+
+   res=sb.toString();
+  }
+
+  return res;
+ }
+
+
+ public static String toString(Object o)
+ {
+  String res=null;
+
+  if (o!=null)
+  {
+   if (isArray(o))
+   {
+    if (isArrayOfPrimitive(o))
+    {
+     primitiveArraytoString(o);
+    }
+    else
+    {
+     res=toString((Object[])o);
+    }
+   }
+   else
+   {
+    res=o.toString();
+   }
+  }
+
+  return res;
+ }
+
+
+
+ public static String toString(byte values[]){return primitiveArraytoString(values);}
+ public static String toString(short values[]){return primitiveArraytoString(values);}
+ public static String toString(int values[]){return primitiveArraytoString(values);}
+ public static String toString(long values[]){return primitiveArraytoString(values);}
+ public static String toString(char values[]){return primitiveArraytoString(values);}
+ public static String toString(float values[]){return primitiveArraytoString(values);}
+ public static String toString(double values[]){return primitiveArraytoString(values);}
+ public static String toString(boolean values[]){return primitiveArraytoString(values);}
+ public static String toString(String values[]){return toString(values, ",");}
+ public static String toString(Object values[]){return toString(values, ",");}
+
+ public static String toString(byte values[], String separator){return primitiveArraytoString(values, separator);}
+ public static String toString(short values[], String separator){return primitiveArraytoString(values, separator);}
+ public static String toString(int values[], String separator){return primitiveArraytoString(values, separator);}
+ public static String toString(long values[], String separator){return primitiveArraytoString(values, separator);}
+ public static String toString(char values[], String separator){return primitiveArraytoString(values, separator);}
+ public static String toString(float values[], String separator){return primitiveArraytoString(values, separator);}
+ public static String toString(double values[], String separator){return primitiveArraytoString(values, separator);}
+ public static String toString(boolean values[], String separator){return primitiveArraytoString(values, separator);}
+ public static String toString(String values[], String separator)
+ {
+  String res=mergeEnclosing(values, separator, null);
+  if (length(res)>separator.length()) res=res.substring(separator.length());
+  return res;
+ }
+
+ public static String toString(Object values[], String separator)
+ {
+  return toString(ArrayExtras.toArrayOfStrings(values), separator);
+ }
+
+
+
+ public static int getFirstEnclosedInteger(String str) throws NumberFormatException
+ {
+  int res;
+  int len=length(str);
+
+  if (len>0)
+  {
+   try
+   {
+    res=Integer.parseInt(str);
+   }
+   catch (Throwable tr)
+   {
+    StringBuilder sb=new StringBuilder();
+    boolean goon=true;
+    boolean firstDigitFound=false;
+    char ch;
+    int t;
+
+    for (t=0;t<len && goon;t++)
+    {
+     ch=str.charAt(t);
+
+     if (Character.isDigit(ch))
+     {
+      sb.append(ch);
+      firstDigitFound=true;
+     }
+     else
+     {
+      if (firstDigitFound) goon=false;
+     }
+    }
+
+    try
+    {
+     res=getFirstEnclosedInteger(sb.toString());
+    }
+    catch (Throwable tr2)
+    {
+     throw new NumberFormatException("The passed string does not contain any integer");
+    }
+   }
+  } else throw new NumberFormatException("The passed string is null or empty");
+
+  return res;
+ }
+
+
+ /**
+  * THIS IS SLOW (I think, I'm not sure, but honestly I think).
+  * Use this only when you need json just a very few times to justify the adding of Jackson or Gson.
+  *
+  * @param jsonString
+  * @return
+  */
+ public static Map<String, Object> parseJson(String jsonString)
+ {
+  Map map;
+  try
+  {
+   ScriptEngine se=newJavaScriptEngine();
+   se.put("theScript", jsonString);
+   map=(Map)se.eval("JSON.parse(theScript)");
+  }
+  catch (Throwable tr)
+  {
+   System.err.println("OFFENDING JSON: \n"+jsonString+"\n");
+   throw new RuntimeException(tr);
+  }
+
+  HashMap<String, Object> hmkeysValues=new HashMap<>();
+
+  for (Object k : map.keySet())
+  {
+   hmkeysValues.put(k.toString(), map.get(k));
+  }
+
+  return hmkeysValues;
+ }
+
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Other
+
+
+
+ /**
+  * Returns a string built with the passed bytes trying to detect the encoding of the bytes...
+  *
+  * @param b the bytes to be converted in a string
+  * @return
+  */
+ public static String newAutoString(byte b[])
+ {
+  return newAutoString(b, defaultCharsetName);
+ }
+
+ public static String newAutoString(byte b[], int off, int len)
+ {
+  return newAutoString(copyInNew(b, off, len), defaultCharsetName);
+ }
+
+ public static String newAutoString(byte b[], int off, int len, String charsetName)
+ {
+  return newAutoString(copyInNew(b, off, len), charsetName);
+ }
+
+ public static String newAutoString(byte b[], String charsetName)
+ {
+  String res=null;
+
+  if (b!=null && b.length>0)
+  {
+   int skipBom=0;
+   String enc=null;
+
+   if (b.length>2)
+   {
+    if (b[0]==-1 &&
+        b[1]==-2)
+    {
+     enc="UTF-16LE";
+     skipBom=2;
+    }
+
+    if (b[0]==-2 &&
+        b[1]==-1 &&
+        b[2]==-0)
+    {
+     enc="UTF-16BE";
+     skipBom=2;
+    }
+
+    if (b[0]==-17 &&
+        b[1]==-69 &&
+        b[2]==-65)
+    {
+     enc="UTF-8";
+     skipBom=3;
+    }
+
+    if (enc!=null)
+    {
+     try
+     {
+      res=new String(b, skipBom, b.length-skipBom, enc);
+     }
+     catch (Throwable tr)
+     {
+      throw new RuntimeException(tr);
+     }
+    }
+   }
+
+   if (enc==null)
+   {
+    try
+    {
+     res=new String(b, charsetName);
+    }
+    catch (Throwable tr)
+    {
+     throw new RuntimeException(tr);
+    }
+   }
+  }
+
+  return res;
+ }
+
+
+ public static String deAccentize(String str)
+ {
+  if (!isNotBlank(str)) return str;
+  String nfdNormalizedString=Normalizer.normalize(str, Normalizer.Form.NFD);
+  Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+  return pattern.matcher(nfdNormalizedString).replaceAll("");
+ }
+
+
+ public static String[] toLines(CharSequence sequence)
+ {
+  String res[]=null;
+
+  if (hasChars(sequence))
+  {
+   String str=sequence.toString();
+   sequence=replace(str, "\r\n", "\n", false);
+   if (hasChars(sequence)) res=unmerge(str, '\n');
+  }
+
+  return res;
+ }
+
+
+ public static String[] toTrimmedLines(String str)
+ {
+  return removeNullAndEmpty(betterTrim(toLines(str)));
+ }
+
+
+ // this method tests the length of 'str' and if it has more than 'len' chars truncate it
+ // to let it have only 'len'chars.
+ // If 'str' has less chars than 'len' than this method adds addition 'fillerChar' chars
+ // to the right (or to the left if 'addFillerToRight'=false) of the string till str'll have
+ // exactly 'len' chars
+ public static String grantLength(String str, int len, char fillerChar, boolean addFillerToRight)
+ {
+  String res=str;
+
+  if (!hasChars(res)) res="";
+
+  int clen=res.length();
+
+  if (clen>len) res=res.substring(0, len);
+  else
+  {
+   StringBuilder sb=new StringBuilder();
+   int t=0;
+
+   while (t+clen<len) {sb.append(fillerChar);t++;}
+
+   if (addFillerToRight) res+=sb.toString();
+   else
+   {
+    sb.append(res);
+    res=sb.toString();
+   }
+  }
+
+  return res;
+ }
+
+
+ // same me.as grantLength but it never truncates the string if it is bigger than len
+ public static String grantMinLength(String str, int len, char fillerChar, boolean addFillerToRight)
+ {
+  String res=str;
+
+  if (length(res)<len)
+  {
+   res=grantLength(str, len, fillerChar, addFillerToRight);
+  }
+
+  return res;
+ }
+
+
+
+
+}
