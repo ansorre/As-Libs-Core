@@ -1,17 +1,14 @@
 # As-Libs-Core
 
-This is my open source (Apache) own grown core Java libraries I use for all other projects of mine. 
+These are my own grown open source core Java libraries that I use for all my other Java projects.
 
-## What's the point
+## Key points
 
-* no dependencies at all 
-* to do 
-* to do
-* Apache 2.0 licensed.
+ * no dependencies at all 
+ * to do 
+ * to do
+ * Apache 2.0 license
 
 ## Quick links
 
- * [Project website](todo)
- * [Github project](todo)
- * [Getting started](todo)
- * [Demo code](todo)
+ * [Github project](https://github.com/ansorre/As-Libs-Core)
