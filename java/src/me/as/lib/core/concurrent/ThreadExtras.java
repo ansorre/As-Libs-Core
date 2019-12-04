@@ -106,9 +106,7 @@ public class ThreadExtras
      threadPool.put(this);
     }
     else
-    {
      break;
-    }
    }
   }
  }

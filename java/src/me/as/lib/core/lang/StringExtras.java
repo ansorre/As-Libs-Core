@@ -155,6 +155,15 @@ public class StringExtras
   return false;
  }
 
+ public static boolean isNotBlankNl(CharSequence sequence)
+ {
+  if (hasChars(sequence))
+   return hasChars(betterTrimNl(sequence));
+
+  return false;
+ }
+
+
  public static boolean areNotBlank(CharSequence... sequence)
  {
   int t, len=ArrayExtras.length(sequence);
@@ -166,6 +175,20 @@ public class StringExtras
 
   return true;
  }
+
+ public static boolean areNotBlankNl(CharSequence... sequence)
+ {
+  int t, len=ArrayExtras.length(sequence);
+
+  for (t=0;t<len;t++)
+  {
+   if (!isNotBlankNl(sequence[t])) return false;
+  }
+
+  return true;
+ }
+
+
 
  /**
   * Checks if sequence is not null and has more than 0 non blank chars
@@ -2944,6 +2967,26 @@ public class StringExtras
 
 
 
+ public static HashMap<String, String> quickMap(String... keysValues)
+ {
+  HashMap<String, String> res=new HashMap<>();
+  int t, len=ArrayExtras.length(keysValues);
+
+  if (len>0)
+  {
+   if (MathExtras.isOdd(len)) throw new RuntimeException("Numbner of keys is different from number of values!!!");
+
+   for (t=0;t<len;t+=2)
+   {
+    res.put(keysValues[t], keysValues[t+1]);
+   }
+  }
+
+  return res;
+ }
+
+
+
 
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
  // Other
@@ -3111,6 +3154,16 @@ public class StringExtras
   return res;
  }
 
+
+ public static String purgeComments(String txt, String singleLineComment, String multiLineCommentBegin, String multiLineCommentEnd, String stringsDelimiters, char stringsDelimitersEscapeChar)
+ {
+  return TextCommentsPurger.purgeComments(txt, singleLineComment, multiLineCommentBegin, multiLineCommentEnd, stringsDelimiters, stringsDelimitersEscapeChar);
+ }
+
+ public static String purgeCommentsFromCLikeLanguageSource(String cLikeLanguageSource)
+ {
+  return TextCommentsPurger.purgeComments(cLikeLanguageSource, "//", "/*", "*/", "'\"`", '\\');
+ }
 
 
 

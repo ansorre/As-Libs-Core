@@ -119,7 +119,7 @@ public class AsynchLog implements Logable, Runnable
   {
    Integer cmd=(Integer)commands.getWaiting();
 
-   switch (cmd.intValue())
+   switch (cmd)
    {
     case CMDID_close:
          {

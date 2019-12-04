@@ -179,7 +179,8 @@ public class SpeedBytesWrapper extends BytesRoomHandler
      {
       ch=(char)(content[end-1] & 0xFF);
       if (ch=='\r') end--;
-      else break;
+      else
+       break;
      }
 
      if (end>start)

@@ -20,6 +20,7 @@ package me.as.lib.core;
 import static me.as.lib.core.log.DefaultTraceLevels.WARNING;
 import static me.as.lib.core.log.LogEngine.logOut;
 
+
 public class StillUnimplemented extends RuntimeException
 {
 
