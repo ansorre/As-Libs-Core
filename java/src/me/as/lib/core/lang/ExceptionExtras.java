@@ -35,7 +35,7 @@ public class ExceptionExtras
  public static void showStack(String msg)
  {
   System.err.println("\n\n----->INFORMATIONAL EXCEPTION<-----");
-  System.err.println(printDeepCauseStackTrace(new RuntimeException(msg)));
+  System.err.println(getDeepCauseStackTrace(new RuntimeException(msg)));
  }
 
 
@@ -47,25 +47,32 @@ public class ExceptionExtras
   return baos.toString();
  }
 
- public static String printDeepCauseStackTrace(Throwable tr)
+
+ public static Throwable getDeepCause(Throwable tr)
  {
   boolean goOn=true;
-  Throwable c, cursor=tr;
+  Throwable c, res=tr;
 
   do
   {
-   c=cursor.getCause();
-   if (c!=null) cursor=c;
+   c=res.getCause();
+   if (c!=null) res=c;
    else goOn=false;
   } while (goOn);
 
-  return printCompleteStackTrace(cursor);
+  return res;
+ }
+
+
+ public static String getDeepCauseStackTrace(Throwable tr)
+ {
+  return getCompleteStackTrace(getDeepCause(tr));
  }
 
 
 
 
- public static String printCompleteStackTrace(Throwable tr)
+ public static String getCompleteStackTrace(Throwable tr)
  {
   StringBuilder sb=new StringBuilder();
 
@@ -163,7 +170,7 @@ public class ExceptionExtras
 
  public static void systemErrDeepCauseStackTrace(Throwable tr)
  {
-  System.err.println(printDeepCauseStackTrace(tr));
+  System.err.println(getDeepCauseStackTrace(tr));
  }
 
 

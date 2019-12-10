@@ -67,6 +67,44 @@ public class StringExtras
 
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
+ private static final String _spaces_="                        ";
+
+ public static String getSpaces(int howMany)
+ {
+  int sLen=_spaces_.length();
+  if (howMany<sLen) return _spaces_.substring(0, howMany);
+  StringBuilder sb=new StringBuilder();
+
+  while (howMany>0)
+  {
+   int min=Math.min(sLen, howMany);
+   sb.append(_spaces_, 0, min);
+
+   howMany-=min;
+  }
+
+  return sb.toString();
+ }
+
+/*
+
+ public static void main(String args[])
+ {
+  String spac=getSpaces(0);
+  System.out.println("->"+spac+"<-");
+
+  spac=getSpaces(1);
+  System.out.println("->"+spac+"<- "+spac.length());
+
+  spac=getSpaces(8);
+  System.out.println("->"+spac+"<- "+spac.length());
+
+  spac=getSpaces(48);
+  System.out.println("->"+spac+"<- "+spac.length());
+ }
+
+*/
+
  /**
   * Returns 0 if the sequence is null otherwise the sequence length
   *
@@ -77,6 +115,8 @@ public class StringExtras
  {
   return (sequence==null) ? 0 : sequence.length();
  }
+
+
 
 
  public static byte[] getBytes(String txt)

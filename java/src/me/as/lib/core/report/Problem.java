@@ -25,6 +25,7 @@ public class Problem
   warning,
   error,
   showstopper,
+  showstopperNoPrefix,
   none
  }
 

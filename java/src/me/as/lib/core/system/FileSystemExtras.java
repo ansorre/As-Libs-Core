@@ -59,6 +59,17 @@ public class FileSystemExtras
 
 
 
+ private static <F> F handleException(Throwable tr)
+ {
+  if (tr instanceof RuntimeException)
+   throw ((RuntimeException)tr);
+
+  if (tr instanceof IOException)
+   throw new me.as.lib.core.io.IOException(tr);
+  else
+   throw new RuntimeException(tr);
+ }
+
 
  public static boolean exists(String fname)
  {
@@ -128,7 +139,7 @@ public class FileSystemExtras
   }
   catch (Throwable tr)
   {
-   tr.printStackTrace();
+   handleException(tr);
   }
  }
 
@@ -265,7 +276,7 @@ public class FileSystemExtras
   }
   catch (Throwable tr)
   {
-   throw new RuntimeException(tr);
+   return handleException(tr);
   }
  }
 
@@ -368,7 +379,7 @@ public class FileSystemExtras
   }
   catch (Throwable tr)
   {
-   throw new RuntimeException(tr);
+   return handleException(tr);
   }
 
   return res;
@@ -386,7 +397,7 @@ public class FileSystemExtras
   }
   catch (Throwable tr)
   {
-   tr.printStackTrace();
+   return handleException(tr);
   }
 
   return res;
@@ -427,16 +438,18 @@ public class FileSystemExtras
   }
   catch (Throwable tr)
   {
-   if (tr instanceof IOException)
-    throw new me.as.lib.core.io.IOException(tr);
-   else
-    throw new RuntimeException(tr);
+   return handleException(tr);
   }
 
   return res;
  }
 
 
+
+ public static String getCurrentWorkingDirectory()
+ {
+  return Paths.get(".").toAbsolutePath().normalize().toString();
+ }
 
 
 
@@ -593,7 +606,7 @@ public class FileSystemExtras
   }
   catch (Throwable tr)
   {
-   throw new RuntimeException(tr);
+   return handleException(tr);
   }
 
   return list;
@@ -777,7 +790,7 @@ public class FileSystemExtras
   }
   catch (Throwable tr)
   {
-   throw new RuntimeException(tr);
+   handleException(tr);
   }
  }
 
@@ -921,7 +934,7 @@ public class FileSystemExtras
   }
   catch (Throwable tr)
   {
-   throw new me.as.lib.core.io.IOException(tr);
+   return handleException(tr);
   }
 
   return res;
@@ -1039,7 +1052,7 @@ public class FileSystemExtras
   }
   catch (Throwable tr)
   {
-   throw new RuntimeException(tr);
+   return handleException(tr);
   }
 
   return res;

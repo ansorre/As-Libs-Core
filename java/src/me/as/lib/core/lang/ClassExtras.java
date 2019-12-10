@@ -244,6 +244,19 @@ public class ClassExtras implements Types
  }
 
 
+ public static Class classFromNameNE(String className)
+ {
+  try
+  {
+   return classFromName(className);
+  }
+  catch (Throwable tr)
+  {
+   throw new RuntimeException(tr);
+  }
+ }
+
+
  public static Class classFromName(String className) throws ClassNotFoundException
  {
   if (!isNotBlank(className)) throw new ClassNotFoundException("ClassExtras.classFromName exception: className is null");
@@ -1427,7 +1440,7 @@ public class ClassExtras implements Types
  /**
   *
   * @param c the class
-  * @return all the methods of a class both public, private and so on, from this class me.as either from all the ancestor
+  * @return all the methods of a class both public, private and so on, from this class as well from all the ancestor
   */
  public static Method[] getAllMethods(Class c)
  {
@@ -1453,7 +1466,7 @@ public class ClassExtras implements Types
   *
   * @param c class
   * @param a annotation
-  * @return all the methods of a class both public, private and so on, from this class me.as either from all the
+  * @return all the methods of a class both public, private and so on, from this class as well from all the
   * ancestors that are annotated with a
   */
  public static Method[] getAllAnnotatedMethods(Class c, Class<? extends Annotation> a)

@@ -30,6 +30,13 @@ public class Problems extends ArrayList<Problem>
 {
  private Boolean hasShowStoppers=null;
 
+
+ public void addShowStopperNoPrefix(String message)
+ {
+  add(Type.showstopperNoPrefix,  message);
+  hasShowStoppers=true;
+ }
+
  public void addShowStopper(String message)
  {
   add(Type.showstopper,  message);
@@ -57,7 +64,7 @@ public class Problems extends ArrayList<Problem>
   if (hasShowStoppers==null)
   {
    for (Problem p : this)
-    if (p.type==Type.showstopper)
+    if (p.type==Type.showstopper || p.type==Type.showstopperNoPrefix)
     {
      hasShowStoppers=true;
      break;

@@ -5,7 +5,7 @@ These are my own grown open source core Java libraries that I use for all my oth
 ## Key points
 
  * no dependencies at all 
- * to do 
+ * used in many production software for more than 10 years  
  * to do
  * Apache 2.0 license
 

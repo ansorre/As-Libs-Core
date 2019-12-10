@@ -20,7 +20,6 @@ package me.as.lib.core.lang;
 import me.as.lib.core.StillUnimplemented;
 import me.as.lib.core.extra.QuickSortExtras;
 import me.as.lib.core.io.util.MemBytesRoom;
-import me.as.lib.core.system.FileSystemExtras;
 
 import java.io.*;
 import java.io.IOException;
@@ -554,20 +553,24 @@ public class ResourceExtras
  {
   String ppDir=replace(packagePath, ".", "/");
   String dir=mergePath(directory, ppDir);
-  String tmpStr, ma, df[];
-  List<String> files=((alsoSubPackages) ? listTheTree(dir) : listAll(dir));
-  int t, len=ArrayExtras.length(files);
 
-  for (t=0;t<len;t++)
+  if (isDirectory(dir))
   {
-   ma=mergePath(dir, files.get(t));
-   df=getDirAndFilename(ma);
-   if (df[0].equals(dir)) res.add(df[1]);
-   else
+   String tmpStr, ma, df[];
+   List<String> files=((alsoSubPackages) ? listTheTree(dir) : listAll(dir));
+   int t, len=ArrayExtras.length(files);
+
+   for (t=0;t<len;t++)
    {
-    tmpStr=ma.substring(dir.length()+1);
-    tmpStr=replace(tmpStr, File.separator, ".");
-    res.add(tmpStr);
+    ma=mergePath(dir, files.get(t));
+    df=getDirAndFilename(ma);
+    if (df[0].equals(dir)) res.add(df[1]);
+    else
+    {
+     tmpStr=ma.substring(dir.length()+1);
+     tmpStr=replace(tmpStr, File.separator, ".");
+     res.add(tmpStr);
+    }
    }
   }
  }
@@ -621,15 +624,17 @@ public class ResourceExtras
 
  public static String[] listResources(String packagePath, boolean alsoSubPackages)
  {
-  ArrayList<String> list=new ArrayList<String>();
+  ArrayList<String> list=new ArrayList<>();
   int t, len;
   String cps[]=getAsManyClassPathItemsAsPossible();
   len=ArrayExtras.length(cps);
 
   for (t=0;t<len;t++)
   {
-   if (isDirectory(cps[t])) listResourcesInDirectory(packagePath, cps[t], alsoSubPackages, list);
-   else listResourcesInJarZip(packagePath, cps[t], alsoSubPackages, list);
+   if (isDirectory(cps[t]))
+    listResourcesInDirectory(packagePath, cps[t], alsoSubPackages, list);
+   else
+    listResourcesInJarZip(packagePath, cps[t], alsoSubPackages, list);
   }
 
   return QuickSortExtras.sort(list.toArray(new String[list.size()]));
