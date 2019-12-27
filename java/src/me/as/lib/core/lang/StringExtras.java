@@ -117,6 +117,23 @@ public class StringExtras
  }
 
 
+ public static <S extends CharSequence> int maxLength(S sequences[])
+ {
+  int res=0;
+  int t, len=ArrayExtras.length(sequences);
+
+  for (t=0;t<len;t++)
+  {
+   int sLen=length(sequences[t]);
+   if (res<sLen)
+    res=sLen;
+  }
+
+  return res;
+ }
+
+
+
 
 
  public static byte[] getBytes(String txt)
@@ -3195,7 +3212,7 @@ public class StringExtras
  }
 
 
- public static String purgeComments(String txt, String singleLineComment, String multiLineCommentBegin, String multiLineCommentEnd, String stringsDelimiters, char stringsDelimitersEscapeChar)
+ public static String purgeComments(String txt, String singleLineComment, String multiLineCommentBegin, String multiLineCommentEnd, String stringsDelimiters, Character stringsDelimitersEscapeChar)
  {
   return TextCommentsPurger.purgeComments(txt, singleLineComment, multiLineCommentBegin, multiLineCommentEnd, stringsDelimiters, stringsDelimitersEscapeChar);
  }

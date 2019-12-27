@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.annotation.ElementType;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -56,6 +57,16 @@ public class FileSystemExtras
 {
  // singleton
  private FileSystemExtras(){}
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+ public enum CopyResult
+ {
+  wereNotDifferent,
+  copiedFile,
+  madeDirectory
+ }
+
 
 
 
@@ -86,9 +97,7 @@ public class FileSystemExtras
   boolean res=isDirectory(dname);
 
   if (!res)
-  {
    res=mkdirs(dname);
-  }
 
   return res;
  }
@@ -962,6 +971,41 @@ public class FileSystemExtras
   return res;
  }
 
+
+ public static CopyResult copyIfDifferent(String orig_fileOrDir, String dest_fileOrDir)
+ {
+  CopyResult res=CopyResult.wereNotDifferent;
+  long orig_LM=lastModified(orig_fileOrDir);
+  long dest_LM=lastModified(dest_fileOrDir);
+  long orig_L=fileLength(orig_fileOrDir);
+  long dest_L=fileLength(dest_fileOrDir);
+  boolean orig_isF=isFile(orig_fileOrDir);
+  boolean dest_isF=isFile(dest_fileOrDir);
+
+  if (!(orig_isF==dest_isF && orig_LM==dest_LM && orig_L==dest_L))
+  {
+   if (orig_isF && isDirectory(dest_fileOrDir))
+    throw new RuntimeException("Origin file is a file but destination is a directory!");
+
+   if (!orig_isF && isFile(dest_fileOrDir))
+    throw new RuntimeException("Origin file is a directory but destination is a file!");
+
+   if (orig_isF)
+   {
+    saveInFile(dest_fileOrDir, loadFromFile(orig_fileOrDir));
+    res=CopyResult.copiedFile;
+   }
+   else
+   {
+    mkdirs(dest_fileOrDir);
+    res=CopyResult.madeDirectory;
+   }
+
+   setLastModified(dest_fileOrDir, orig_LM);
+  }
+
+  return res;
+ }
 
 
  public static boolean saveInFile(String fname, byte data[])

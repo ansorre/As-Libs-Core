@@ -212,6 +212,19 @@ public class ResourceExtras
 
 
 
+ public static MemBytesRoom loadPackagedBytesNE(String fname)
+ {
+  try
+  {
+   return loadPackagedBytes(fname);
+  }
+  catch (Throwable tr)
+  {
+   return null;
+  }
+ }
+
+
  public static MemBytesRoom loadPackagedBytes(String fname) throws PackagedFileNotFoundException, IOException
  {
   MemBytesRoom mbr=new MemBytesRoom();

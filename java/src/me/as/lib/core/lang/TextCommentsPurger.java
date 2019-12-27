@@ -111,15 +111,17 @@ class TextCommentsPurger
   * @param stringsDelimiters
   * @return
   */
- static String purgeComments(String source, String singleLineComment, String multiLineCommentBegin, String multiLineCommentEnd, String stringsDelimiters, char stringsDelimitersEscapeChar)
+ static String purgeComments(String source, String singleLineComment, String multiLineCommentBegin, String multiLineCommentEnd, String stringsDelimiters, Character _stringsDelimitersEscapeChar)
  {
   String res=source;
+  char stringsDelimitersEscapeChar=(_stringsDelimitersEscapeChar!=null ? _stringsDelimitersEscapeChar : 0);
+  int singleLineCommentLen=length(singleLineComment);
+  int multiLineCommentBeginLen=length(multiLineCommentBegin);
+  boolean hSingleLine=(singleLineCommentLen>0 && source.contains(singleLineComment));
+  boolean hMultiLine=(multiLineCommentBeginLen>0 && source.contains(multiLineCommentBegin));
 
-  if (isNotBlank(source) &&
-      source.contains(singleLineComment) || source.contains(multiLineCommentBegin)) // these are not exhaustive checks, just the quick ones to handle the easy cases
+  if (isNotBlank(source) && (hSingleLine || hMultiLine)) // these are not exhaustive checks, just the quickest ones to handle the easy cases
   {
-   int singleLineCommentLen=length(singleLineComment);
-   int multiLineCommentBeginLen=length(multiLineCommentBegin);
    int multiLineCommentEndLen=length(multiLineCommentEnd);
    int stringsDelimitersLen=length(stringsDelimiters);
 

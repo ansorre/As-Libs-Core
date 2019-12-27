@@ -655,9 +655,9 @@ public class ByteExtras
  }
 
 
- public static HashMap unZipInMemory(byte zippedBytes[]) throws me.as.lib.core.io.IOException
+ public static HashMap<String, byte[]> unZipInMemory(byte zippedBytes[]) throws me.as.lib.core.io.IOException
  {
-  HashMap res=null;
+  HashMap<String, byte[]> res=null;
   ByteArrayInputStream bais=new ByteArrayInputStream(zippedBytes);
   ZipInputStream zis=new ZipInputStream(bais);
   ZipEntry ze;
@@ -678,7 +678,7 @@ public class ByteExtras
      uncompressedData=readZippedData(zis, ze.getSize());
      name=ze.getName();
 
-     if (res==null) res=new HashMap();
+     if (res==null) res=new HashMap<>();
      res.put(name, uncompressedData);
     }
    }

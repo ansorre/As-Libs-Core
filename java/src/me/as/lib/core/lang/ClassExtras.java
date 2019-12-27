@@ -31,6 +31,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static me.as.lib.core.concurrent.ThreadExtras.getAllRunningThreads;
+import static me.as.lib.core.lang.ResourceExtras.listResources;
 import static me.as.lib.core.lang.StringExtras.doTheyMatch;
 import static me.as.lib.core.lang.StringExtras.endsWith;
 import static me.as.lib.core.lang.StringExtras.splitLast;
@@ -784,6 +785,32 @@ public class ClassExtras implements Types
  }
 
 
+ public static <I> List<Class<I>> getClassesInPackageInstancing(String packag, Class<I> interfac)
+ {
+  List<Class<I>> res=new ArrayList<>();
+  String ress[]=listResources(packag, true);
+
+  int t, len=ArrayExtras.length(ress);
+
+  for (t=0;t<len;t++)
+  {
+   if (ress[t].endsWith(".class"))
+   {
+    Class<I> jbc;
+    String cName=StringExtras.replace(packag+"."+ress[t], "/", ".");
+    cName=StringExtras.replace(cName, ".class", null).substring(1);
+    cName=StringExtras.replace(cName, "..", ".");
+
+    if (isInstanceOf(jbc=classFromNameNE(cName), interfac) &&
+        !jbc.isInterface() &&
+        !Modifier.isAbstract(jbc.getModifiers()))
+     res.add(jbc);
+
+   }
+  }
+
+  return res;
+ }
 
 
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .

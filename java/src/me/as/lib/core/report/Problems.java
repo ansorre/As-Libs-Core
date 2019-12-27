@@ -39,9 +39,27 @@ public class Problems extends ArrayList<Problem>
 
  public void addShowStopper(String message)
  {
-  add(Type.showstopper,  message);
+  add(Type.showstopper, message);
   hasShowStoppers=true;
  }
+
+ public void addShowStopper(String message, boolean alsoThrowRuntimeException)
+ {
+  add(Type.showstopper, message);
+  hasShowStoppers=true;
+  if (alsoThrowRuntimeException)
+   throw new RuntimeException(message);
+ }
+
+
+ public void addShowStopper(Throwable tr, boolean alsoThrowRuntimeException)
+ {
+  add(Type.showstopper, tr.getMessage());
+  hasShowStoppers=true;
+  if (alsoThrowRuntimeException)
+   throw new RuntimeException(tr);
+ }
+
 
  public void addWarning(String message)
  {

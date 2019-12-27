@@ -890,19 +890,18 @@ public class ArrayExtras
  }
 
 
- public static Collection toCollection(Object array)
+ public static <T> Collection<T> toCollection(T array[])
  {
   return toList(array);
  }
 
- public static List toList(Object array)
+ public static <T> List<T> toList(T array[])
  {
   int len=length(array);
   ArrayList res=new ArrayList(length(array));
   if (len>0) for (int t=0;t<len;t++) res.add(Array.get(array, t));
   return res;
  }
-
 
  public static <A> A[] toArray(Object o)
  {
@@ -1379,18 +1378,18 @@ public class ArrayExtras
 
 
 
- public static Object remove(Object array, Object elementToRemove)
+ public static <A> A remove(Object array, Object elementToRemove)
  {
   Object res=array;
   int idx=indexOf(array, 0, elementToRemove);
 
   if (idx>=0)
   {
-   Array.set(array, 0, null);
+   Array.set(array, idx, null);
    res=purgeNulls(array);
   }
 
-  return res;
+  return (A)res;
  }
 
 
