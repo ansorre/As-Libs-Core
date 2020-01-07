@@ -28,6 +28,7 @@ import java.util.zip.*;
 
 import static me.as.lib.core.lang.ClassExtras.getAsManyClassPathItemsAsPossible;
 import static me.as.lib.core.lang.ClassExtras.getClassPackagePath;
+import static me.as.lib.core.lang.StringExtras.startsWith;
 import static me.as.lib.core.system.FileSystemExtras.asUnixPath;
 import static me.as.lib.core.system.FileSystemExtras.getDirAndFilename;
 import static me.as.lib.core.system.FileSystemExtras.isDirectory;
@@ -457,7 +458,8 @@ public class ResourceExtras
 
  private static void listResourcesInJarZip(String packagePath, String jarZipFileName, boolean alsoSubPackages, ArrayList<String> res)
  {
-  String tmpS, qpp=replace(packagePath, ".", "/")+"/";
+  String tmpS, qpp=replace(replace(packagePath, ".", "/")+"/", "//", "/");
+  if (startsWith(qpp, "/")) qpp=qpp.substring(1);
   int plen=qpp.length();
   ZipFile zf=null;
 

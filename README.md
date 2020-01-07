@@ -5,9 +5,14 @@ These are my own grown open source core Java libraries that I use for all my oth
 ## Key points
 
  * no dependencies at all 
- * used in many production software for more than 10 years  
- * to do
+ * used in many production software for more than 10 years
+ * ... I'll list main packages included ...  
  * Apache 2.0 license
+ 
+## Feel like sponsoring this project?  
+**Compliments, it's a very good idea. 🤗**    
+You can do so right here: [Sponsor @ansorre on GitHub sponsors](https://github.com/sponsors/ansorre)  
+Why it's a good idea? Read [here](https://ansorre.github.io/sponsor/).    
 
 ## Quick links
 
