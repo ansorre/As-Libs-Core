@@ -499,6 +499,43 @@ public class StringExtras
   return str;
  }
 
+
+
+ public static String purgeAllNewLines(String txt)
+ {
+  String res=replace(txt, "\r\n", " ");
+  res=replace(res, "\n\r", " ");
+
+  int t, len=blankChars_and_nl.length();
+
+  for (t=0;t<len;t++)
+  {
+   res=replace(res, ""+blankChars_and_nl.charAt(t), " ");
+  }
+
+  return res;
+ }
+
+ public static String purgeAllNewLinesAndAllWhiteSpaces(String txt)
+ {
+  String res=purgeAllNewLines(txt);
+  int t, len=blankChars_and_nl.length();
+
+  for (t=0;t<len;t++)
+  {
+   res=replace(res, ""+blankChars_and_nl.charAt(t), null);
+  }
+
+  return res;
+ }
+
+
+
+
+
+
+
+
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
  // transforms
 
