@@ -376,6 +376,42 @@ public class ClassExtras implements Types
  }
 
 
+ public static Class[] toClasses(Object... instances)
+ {
+  Class res[]=null;
+  int t, len=ArrayExtras.length(instances);
+
+  if (len>0)
+  {
+   res=new Class[len];
+
+   for (t=0;t<len;t++)
+   {
+    res[t]=instances[t].getClass();
+   }
+  }
+
+  return res;
+ }
+
+
+
+ public static <T> T newInstanceByClass(Class<T> clazz, Object... initargs)
+ {
+  T res;
+
+  try
+  {
+   res=clazz.getConstructor(toClasses(initargs)).newInstance(initargs);
+  }
+  catch (Throwable tr)
+  {
+   throw new RuntimeException(tr);
+  }
+
+  return res;
+ }
+
 
  public static <T> T newInstanceByClass(Class<T> clazz)
  {

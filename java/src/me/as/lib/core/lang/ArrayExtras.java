@@ -756,7 +756,7 @@ public class ArrayExtras
 
 
 
- public static Object purgeNulls(Object array)
+ public static <A> A[] purgeNulls(A array[])
  {
   int nc=nullsCount(array);
   if (nc==0) return array;
@@ -777,7 +777,7 @@ public class ArrayExtras
 
   } catch (Throwable tr){throw new RuntimeException(tr);}
 
-  return res;
+  return (A[])res;
  }
 
 
@@ -1378,9 +1378,9 @@ public class ArrayExtras
 
 
 
- public static <A> A remove(Object array, Object elementToRemove)
+ public static <A> A[] remove(A array[], A elementToRemove)
  {
-  Object res=array;
+  A res[]=array;
   int idx=indexOf(array, 0, elementToRemove);
 
   if (idx>=0)
@@ -1389,18 +1389,19 @@ public class ArrayExtras
    res=purgeNulls(array);
   }
 
-  return (A)res;
+  return res;
  }
 
 
- public static Object removeLastElement(Object array)
+ public static <A> A[] removeLastElement(A array[])
  {
   return removeLastElements(array, 1);
  }
 
- public static Object removeLastElements(Object array, int howManyLastElements)
+
+ public static <A> A[] removeLastElements(A array[], int howManyLastElements)
  {
-  Object res=array;
+  A res[]=array;
 
   if (howManyLastElements>0)
   {
@@ -1418,9 +1419,9 @@ public class ArrayExtras
 
  }
 
- public static Object removeAt(Object array, int index)
+ public static <A> A[] removeAt(A array[], int index)
  {
-  Object res=array;
+  A res[]=array;
 
   if (index>=0)
   {

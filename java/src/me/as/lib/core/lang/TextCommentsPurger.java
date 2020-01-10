@@ -17,8 +17,6 @@
 package me.as.lib.core.lang;
 
 
-import me.as.lib.core.system.FileSystemExtras;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -26,8 +24,6 @@ import java.util.Stack;
 import static me.as.lib.core.lang.StringExtras.*;
 import static me.as.lib.core.lang.TextCommentsPurger.Event.Type.*;
 import static me.as.lib.core.lang.TextCommentsPurger.Event.getPreviousEventPosition;
-import static me.as.lib.core.log.LogEngine.logOut;
-
 
 
 /**
