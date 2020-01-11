@@ -2302,6 +2302,27 @@ public class StringExtras
 
 
 
+ public static Integer extractInt(String str)
+ {
+  String s[]=str.split(" ");
+  int t, len=ArrayExtras.length(s);
+
+  for (t=0;t<len;t++)
+  {
+   try
+   {
+    return toInt(s[t]);
+   }
+   catch (Throwable ignore)
+   {
+   }
+  }
+
+  throw new NumberFormatException("cannot extract an int from '"+str+"'");
+ }
+
+
+/*
  public static int extractInt(String str, int defaultValue)
  {
   int res;
@@ -2356,6 +2377,7 @@ public class StringExtras
 
   return res;
  }
+*/
 
 
  public static Object toType(String value, Class<?> type)
@@ -2420,6 +2442,8 @@ public class StringExtras
  {
   return Short.parseShort(betterTrim(str));
  }
+
+
 
  public static int toInt(String str) throws NumberFormatException
  {
