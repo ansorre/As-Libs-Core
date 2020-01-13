@@ -26,9 +26,12 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.text.DecimalFormat;
 import java.text.Normalizer;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -1342,6 +1345,140 @@ public class StringExtras
 
   return str;
  }
+
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Numbers formatting
+
+ private static transient final String numberDictionary[]={"", "K", "M", "G", "T", "P", "E", "Z", "Y"};
+ private static transient final String bytesDictionary[]={"bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+
+
+ public static String formatBytes(double bytes)
+ {
+  return formatBigNumber(bytes, 1024, 0, bytesDictionary, " ");
+ }
+
+ public static String formatBigNumber(double bigNumber)
+ {
+  return formatBigNumber(bigNumber, 1000, 1, numberDictionary, "");
+ }
+
+
+ public static String formatBigNumber(double bigNumber, double demultiplier, int digits, String amountsDctionary[], String inside)
+ {
+  int index;
+
+  for (index=0;index<amountsDctionary.length;index++)
+  {
+   if (bigNumber<demultiplier) break;
+   bigNumber=bigNumber/demultiplier;
+  }
+
+  if (isBlank(inside)) inside="";
+  String res=String.format(Locale.US, "%."+digits+"f", bigNumber);
+
+  if (res.endsWith(".0"))
+   res=res.substring(0, res.length()-2);
+
+  res+=inside+amountsDctionary[index];
+
+  return res;
+ }
+
+
+
+
+ public static String toIntWithSeparators(int value)
+ {
+  return formatDouble(value, 0, 0, Locale.ITALIAN, true, true);
+ }
+
+
+ public static String formatLong(long value)
+ {
+  return formatDouble(value, 0, 0, Locale.getDefault(), true, true);
+ }
+
+
+ public static String formatDouble(double value)
+ {
+  return formatDouble(value, 1, null);
+ }
+
+ public static String formatDouble(double value, Locale loc)
+ {
+  return formatDouble(value, 1, loc);
+ }
+
+
+ public static String formatDouble(double value, int numberOfDecimals)
+ {
+  return formatDouble(value, numberOfDecimals, null);
+ }
+
+
+ public static String formatDouble(double value, int numberOfDecimals, Locale loc)
+ {
+  return formatDouble(value, numberOfDecimals, -1, loc);
+ }
+
+
+ public static String formatDouble(double value, int minNumberOfDecimals, int maxNumberOfDecimals)
+ {
+  return formatDouble(value, minNumberOfDecimals, maxNumberOfDecimals, null);
+ }
+
+ public static String formatDouble(double value, int minNumberOfDecimals, int maxNumberOfDecimals, Locale loc)
+ {
+  return formatDouble(value, minNumberOfDecimals, maxNumberOfDecimals, loc, true, true);
+ }
+
+
+ public static String formatDouble(double value, int minNumberOfDecimals, int maxNumberOfDecimals, Locale loc, boolean grouping)
+ {
+  return formatDouble(value, minNumberOfDecimals, maxNumberOfDecimals, loc, grouping, true);
+ }
+
+ public static String formatDouble(double value, int minNumberOfDecimals, int maxNumberOfDecimals, Locale loc, boolean grouping, boolean returnPlainZeroWhenIsZero)
+ {
+  NumberFormat f;
+
+  if (returnPlainZeroWhenIsZero && value==0) return "0";
+
+  if (loc!=null) f=NumberFormat.getInstance(loc);
+  else f=NumberFormat.getInstance();
+
+  if (f instanceof DecimalFormat)
+  {
+   f.setGroupingUsed(grouping);
+
+   if (minNumberOfDecimals>0) ((DecimalFormat)f).setDecimalSeparatorAlwaysShown(true);
+
+   if (minNumberOfDecimals>=0) f.setMinimumFractionDigits(minNumberOfDecimals);
+   else f.setMinimumFractionDigits(0);
+
+   if (maxNumberOfDecimals>=0) f.setMaximumFractionDigits(maxNumberOfDecimals);
+   else f.setMaximumFractionDigits(Integer.MAX_VALUE);
+  }
+
+  return f.format(value);
+ }
+
+
+ public static String speedFormatPrice(double amount, String currencySymbol)
+ {
+  return currencySymbol+" "+formatDouble(amount, 2, 2, Locale.US, true, true);
+ }
+
+
+
+
+
+
+
 
 
 
@@ -3108,6 +3245,26 @@ public class StringExtras
 
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
  // Other
+
+
+ public static String toBase64(String text)
+ {
+  try
+  {
+   return Base64.getEncoder().encodeToString(text.getBytes(defaultCharsetName));
+  }
+  catch (Throwable tr)
+  {
+   throw new RuntimeException(tr);
+  }
+ }
+
+
+ public static String fromBase64(String base64)
+ {
+  return newAutoString(Base64.getDecoder().decode(base64), defaultCharsetName);
+ }
+
 
 
 
