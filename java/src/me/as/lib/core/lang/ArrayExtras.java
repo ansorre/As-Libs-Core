@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Vector;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -1100,6 +1101,59 @@ public class ArrayExtras
    return (A)array;
   }
  }
+
+
+
+
+
+
+
+
+ /**
+  *   Shuffles all the elements inside 'array'
+  *
+  * @param array bla bla bla
+  * @return it!
+  */
+ public static Object shuffle(Object array)
+ {
+  Random rnd=RandomExtras.getRandomNumberGenerator();
+  return shuffle(rnd, RandomExtras.intRandom(2, 4), rnd.nextDouble()>0.5, 1.0, array);
+ }
+
+
+ public static Object shuffle(Random rnd, int rounds, boolean reverseEachRound, double probPerElement, Object array)
+ {
+  int newi, i, t, len=length(array);
+
+  for (i=0;i<rounds;i++)
+  {
+   if (reverseEachRound) reverse(array);
+
+   for (t=0;t<len;t++)
+   {
+    newi=t+rnd.nextInt(len-t);
+
+    if (t!=newi && (probPerElement>=1.0 || rnd.nextDouble()<probPerElement))
+    {
+     swapElements(array, t, newi);
+    }
+   }
+  }
+
+  return array;
+ }
+
+
+
+ public static Object swapElements(Object array, int idx1, int idx2)
+ {
+  Object swap=Array.get(array, idx1);
+  Array.set(array, idx1, Array.get(array, idx2));
+  Array.set(array, idx2, swap);
+  return array;
+ }
+
 
 
 

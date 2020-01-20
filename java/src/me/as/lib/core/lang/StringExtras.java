@@ -1503,6 +1503,11 @@ public class StringExtras
 
 
 
+ public static String messageNow(String message)
+ {
+  return "["+calendar2String(CalendarExtras.now(), simpleDF)+"] "+message;
+ }
+
  public static String getLocalizedMonthName(int month)
  {
   return getLocalizedMonthName(month, Locale.getDefault());
