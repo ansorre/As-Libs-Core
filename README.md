@@ -7,7 +7,7 @@ These are my own grown open source core Java libraries that I use for all my oth
  * no dependencies at all 
  * used in many production software for more than 10 years
  * ... I'll list main packages included ...  
- * Apache 2.0 license
+ * Apache License 2.0
  
 ## Feel like sponsoring this project?  
 **Compliments, it's a very good idea. 🤗**    

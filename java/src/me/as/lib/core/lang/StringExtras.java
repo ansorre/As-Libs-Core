@@ -49,6 +49,7 @@ import static me.as.lib.core.lang.ByteExtras.copyInNew;
 import static me.as.lib.core.lang.RandomExtras.intRandom;
 
 
+// `This string uses backticks.`;
 public class StringExtras
 {
  // singleton
