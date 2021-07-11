@@ -18,12 +18,13 @@ package me.as.lib.core.event;
 
 
 import java.util.EventListener;
+import java.util.EventObject;
 
 
 public interface AnsweredFirer
 {
 
- Object foreachAction(EventListener listener, Object param);
+ Object foreachAction(EventListener listener, EventObject param);
 
 }
 

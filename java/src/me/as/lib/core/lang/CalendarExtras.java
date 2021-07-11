@@ -217,14 +217,14 @@ public class CalendarExtras
  {
   Calendar now=now();
 
-  log.debugging(StringUtil.calendar2String(now, StringUtil.c2s2cDF));
-  log.debugging(StringUtil.calendar2String(trimToField(clone(now), Calendar.YEAR           ), StringUtil.c2s2cDF));
-  log.debugging(StringUtil.calendar2String(trimToField(clone(now), Calendar.MONTH          ), StringUtil.c2s2cDF));
-  log.debugging(StringUtil.calendar2String(trimToField(clone(now), Calendar.WEEK_OF_YEAR   ), StringUtil.c2s2cDF));
-  log.debugging(StringUtil.calendar2String(trimToField(clone(now), Calendar.DAY_OF_YEAR    ), StringUtil.c2s2cDF));
-  log.debugging(StringUtil.calendar2String(trimToField(clone(now), Calendar.HOUR_OF_DAY    ), StringUtil.c2s2cDF));
-  log.debugging(StringUtil.calendar2String(trimToField(clone(now), Calendar.MINUTE         ), StringUtil.c2s2cDF));
-  log.debugging(StringUtil.calendar2String(trimToField(clone(now), Calendar.SECOND         ), StringUtil.c2s2cDF));
+  log.debugging(StringExtras.calendar2String(now, StringExtras.c2s2cDF));
+  log.debugging(StringExtras.calendar2String(trimToField(clone(now), Calendar.YEAR           ), StringExtras.c2s2cDF));
+  log.debugging(StringExtras.calendar2String(trimToField(clone(now), Calendar.MONTH          ), StringExtras.c2s2cDF));
+  log.debugging(StringExtras.calendar2String(trimToField(clone(now), Calendar.WEEK_OF_YEAR   ), StringExtras.c2s2cDF));
+  log.debugging(StringExtras.calendar2String(trimToField(clone(now), Calendar.DAY_OF_YEAR    ), StringExtras.c2s2cDF));
+  log.debugging(StringExtras.calendar2String(trimToField(clone(now), Calendar.HOUR_OF_DAY    ), StringExtras.c2s2cDF));
+  log.debugging(StringExtras.calendar2String(trimToField(clone(now), Calendar.MINUTE         ), StringExtras.c2s2cDF));
+  log.debugging(StringExtras.calendar2String(trimToField(clone(now), Calendar.SECOND         ), StringExtras.c2s2cDF));
  }
 */
 
@@ -234,12 +234,12 @@ public class CalendarExtras
  public static Calendar trimToMillis(Calendar time, long millis)
  {
 //  long deb_were=time.getTimeInMillis();               // <---- remove, just debugging
-//  String deb_before=StringUtil.calendar2String(time); // <---- remove, just debugging
+//  String deb_before=StringExtras.calendar2String(time); // <---- remove, just debugging
 
   time.setTimeInMillis((time.getTimeInMillis()/millis)*millis);
 
 //  System.out.println("millis where: "+deb_were+"    millis are: "+time.getTimeInMillis()+             // <---- remove, just debugging
-//                     "  time before: "+deb_before+"  time after: "+StringUtil.calendar2String(time)); // <---- remove, just debugging
+//                     "  time before: "+deb_before+"  time after: "+StringExtras.calendar2String(time)); // <---- remove, just debugging
 
   return time;
  }
@@ -522,8 +522,8 @@ public class CalendarExtras
    }
 
 /*
-   System.out.println(StringUtil.calendar2String(remote));
-   System.out.println(StringUtil.calendar2String(recent));
+   System.out.println(StringExtras.calendar2String(remote));
+   System.out.println(StringExtras.calendar2String(recent));
    System.out.println("-------");
 */
 

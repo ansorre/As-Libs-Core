@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -259,6 +260,46 @@ public class ObjectExtras
    return it;
   else
    return (O)nullObject;
+ }
+
+
+
+
+ public static <K, V> HashMap<K, V> newHashMap(Object keys_values[])
+ {
+  HashMap res=null;
+  int t, len=ArrayExtras.length(keys_values);
+
+  if (len>0)
+  {
+   res=new HashMap();
+
+   for (t=0;t<len;t+=2)
+    res.put(keys_values[t], keys_values[t+1]);
+
+  }
+
+  return res;
+ }
+
+ public static HashMap specularHashMap(HashMap m)
+ {
+  HashMap res=null;
+
+  if (m!=null)
+  {
+   res=new HashMap();
+   Object o;
+   int len=m.size();
+
+   for (Iterator i=m.keySet().iterator();i.hasNext();)
+   {
+    o=i.next();
+    res.put(m.get(o), o);
+   }
+  }
+
+  return res;
  }
 
 

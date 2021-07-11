@@ -37,7 +37,7 @@ import static me.as.lib.core.lang.ExceptionExtras.systemErrDeepCauseStackTrace;
  {listenersManager.removeListener(listener);}
 
  Firer firer=new Firer()
- {public void foreachAction(EventListener listener, Object param)
+ {public void foreachAction(EventListener listener, EventObject param)
   {((_xxx_Listener)listener)._Xxx_EventOccurred((_xxx_Event)param);}};
 
  public void fire_xxx_EventOccurred(_xxx_Event e)
@@ -246,7 +246,7 @@ public class WeakReferenceListenersManager<L extends EventListener>
 
 
  // returns the answer from listenerThatMustAnswer
- public Object foreachListener(AnsweredFirer firer, Object param, EventListener listenerThatMustAnswer)
+ public Object foreachListener(AnsweredFirer firer, EventObject param, EventListener listenerThatMustAnswer)
  {
   ArrayList<SmartWeakReference<L>> cloned;
 

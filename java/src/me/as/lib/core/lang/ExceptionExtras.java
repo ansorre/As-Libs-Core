@@ -27,10 +27,37 @@ import static me.as.lib.core.lang.StringExtras.hasChars;
 import static me.as.lib.core.lang.StringExtras.simpleDF;
 import static me.as.lib.core.lang.StringExtras.toLines;
 import static me.as.lib.core.lang.StringExtras.trim;
+import static me.as.lib.core.log.LogEngine.logErr;
 
 
 public class ExceptionExtras
 {
+
+
+
+
+ public static Throwable getMostInnerCause(Throwable tr)
+ {
+  Throwable cursor=tr;
+
+  do
+  {
+   if (cursor.getCause()!=null)
+    cursor=cursor.getCause();
+   else
+    break;
+
+  } while (true);
+
+  return cursor;
+ }
+
+
+ public static String getMostInnerMessage(Throwable tr)
+ {
+  return getMostInnerCause(tr).getMessage();
+ }
+
 
  public static void showStack(String msg)
  {
@@ -40,12 +67,20 @@ public class ExceptionExtras
 
 
 
- public static String printStackTrace(Throwable tr)
+ public static String getStackTrace(Throwable tr)
  {
   ByteArrayOutputStream baos=new ByteArrayOutputStream();
   tr.printStackTrace(new PrintStream(baos));
   return baos.toString();
  }
+
+
+ public static void systemErrStackTrace(Throwable tr)
+ {
+  System.err.println(getStackTrace(tr));
+ }
+
+
 
 
  public static Throwable getDeepCause(Throwable tr)
@@ -170,7 +205,7 @@ public class ExceptionExtras
 
  public static void systemErrDeepCauseStackTrace(Throwable tr)
  {
-  System.err.println(getDeepCauseStackTrace(tr));
+  logErr.println(getDeepCauseStackTrace(tr));
  }
 
 

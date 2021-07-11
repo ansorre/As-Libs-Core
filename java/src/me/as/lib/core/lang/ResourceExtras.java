@@ -19,7 +19,7 @@ package me.as.lib.core.lang;
 
 import me.as.lib.core.StillUnimplemented;
 import me.as.lib.core.extra.QuickSortExtras;
-import me.as.lib.core.io.util.MemBytesRoom;
+import me.as.lib.core.io.extra.MemBytesRoom;
 
 import java.io.*;
 import java.io.IOException;
@@ -41,9 +41,7 @@ import static me.as.lib.core.lang.StringExtras.replace;
 
 public class ResourceExtras
 {
- private static ResourceExtras mySelf=new ResourceExtras();
  private static HashMap customResources=null;
-
 
 
  private ResourceExtras()
@@ -82,7 +80,7 @@ public class ResourceExtras
 
  public static void addCustomResources(String name, HashMap namedResources)
  {
-  synchronized (mySelf)
+  synchronized (ResourceExtras.class)
   {
    if (customResources==null) customResources=new HashMap();
    customResources.put(name, namedResources);
@@ -94,7 +92,7 @@ public class ResourceExtras
  {
   HashMap res=null;
 
-  synchronized (mySelf)
+  synchronized (ResourceExtras.class)
   {
    if (customResources!=null)
    {
@@ -108,7 +106,7 @@ public class ResourceExtras
 
  public static void removeCustomResources(String name)
  {
-  synchronized (mySelf)
+  synchronized (ResourceExtras.class)
   {
    if (customResources!=null)
    {
@@ -198,6 +196,11 @@ public class ResourceExtras
   return newAutoString(loadPackagedFile(samePackageClass, fname));
  }
 
+ public static String loadPackagedText(Class samePackageClass, String subPackage, String fname) throws PackagedFileNotFoundException
+ {
+  return loadPackagedText(getClassPackagePath(samePackageClass)+subPackage+"/"+fname);
+ }
+
 
  public static boolean isFile(String fname)
  {
@@ -205,7 +208,7 @@ public class ResourceExtras
 
   try
   {
-   is=mySelf.getClass().getResourceAsStream(fname);
+   is=ResourceExtras.class.getResourceAsStream(fname);
   } catch (Throwable tr){is=null;}
 
   return (is instanceof BufferedInputStream);
@@ -254,7 +257,7 @@ public class ResourceExtras
 
    try
    {
-    is=mySelf.getClass().getResourceAsStream(fname);
+    is=ResourceExtras.class.getResourceAsStream(fname);
    } catch (Throwable tr){is=null;}
 
    if (is==null)
@@ -278,12 +281,12 @@ public class ResourceExtras
     }
    } while (readed>0);
 
-   try {is.close();} catch (Throwable tr){}
+   try {is.close();} catch (Throwable ignore){}
    res=baos.toByteArray();
   }
   catch (Throwable tr)
   {
-   throw new PackagedFileNotFoundException("ResourcesUtil.loadPackagedFile -> FILE NOT FOUND -> "+fname);
+   throw new PackagedFileNotFoundException("ResourceExtras.loadPackagedFile -> FILE NOT FOUND -> "+fname);
   }
 
   return res;
@@ -300,7 +303,7 @@ public class ResourceExtras
   {
    try
    {
-    is=mySelf.getClass().getResourceAsStream(fname);
+    is=ResourceExtras.class.getResourceAsStream(fname);
    } catch (Throwable tr){is=null;}
 
    if (is==null) is=getCustomResourceAsStream(fname);
@@ -312,7 +315,7 @@ public class ResourceExtras
    throwException=true;
   }
 
-  if (throwException) throw new PackagedFileNotFoundException("ResourcesUtil.getPackagedResourceStream -> FILE NOT FOUND -> "+fname);
+  if (throwException) throw new PackagedFileNotFoundException("ResourceExtras.getPackagedResourceStream -> FILE NOT FOUND -> "+fname);
 
   return is;
  }
@@ -329,7 +332,7 @@ public class ResourceExtras
 
    try
    {
-    is=mySelf.getClass().getResourceAsStream(fname);
+    is=ResourceExtras.class.getResourceAsStream(fname);
    } catch (Throwable tr){is=null;}
 
    if (is==null) res=(getCustomResourceBytes(fname)!=null);
@@ -338,7 +341,7 @@ public class ResourceExtras
     is.close();
     res=true;
    }
-  } catch (Throwable tr){}
+  } catch (Throwable ignore){}
 
   return res;
  }
@@ -362,7 +365,7 @@ public class ResourceExtras
   if (al!=null && al.size()>0)
   {
    res=al.toArray(new String[al.size()]);
-   res=QuickSortUtil.sort(res);
+   res=QuickSortExtras.sort(res);
   }
 
   return res;
@@ -376,7 +379,7 @@ public class ResourceExtras
  {
   try
   {
-   URL url=ResourcesUtil.class.getResource(path);
+   URL url=ResourceExtras.class.getResource(path);
    String nroot, tmpF, tmpS=url.getFile();
    File f=new File(tmpS);
 
@@ -391,7 +394,7 @@ public class ResourceExtras
 
      for (t=0;t<len;t++)
      {
-      if (StringUtil.hasChars(root))
+      if (StringExtras.hasChars(root))
       {
        tmpS=root+"/"+fs[t];
        nroot=root+"/"+fs[t];
@@ -405,7 +408,7 @@ public class ResourceExtras
       tmpF=tmpS;
       tmpS=path+"/"+fs[t];
 
-      if (new File(ResourcesUtil.class.getResource(tmpS).getFile()).isDirectory())
+      if (new File(ResourceExtras.class.getResource(tmpS).getFile()).isDirectory())
       {
        tmpF+="/";
        listResources(tmpS, nroot, al);
@@ -444,7 +447,7 @@ public class ResourceExtras
   }
   catch (Throwable tr)
   {
-   throw new PackagedFileNotFoundException("ResourcesUtil.listResources -> NOT FOUND -> "+path, tr);
+   throw new PackagedFileNotFoundException("ResourceExtras.listResources -> NOT FOUND -> "+path, tr);
   }
 
   return al;
@@ -526,8 +529,8 @@ public class ResourceExtras
 
     do
     {
-     odf=StringUtil.splitLast(odf[0], '/', odf);
-     df=(String[])ArrayUtil.clone(odf);
+     odf=StringExtras.splitLast(odf[0], '/', odf);
+     df=(String[])ArrayExtras.clone(odf);
 
      doingDirs=(StringExtras.length(df[1])>0 && StringExtras.length(df[0])>=plen);
 
@@ -597,13 +600,13 @@ public class ResourceExtras
  {
   String dp=packagePath+directory;
   int dplen=dp.length();
-  String df[], s[]=FileSystemUtil.listTheTree(directory);
+  String df[], s[]=FileSystemExtras.listTheTree(directory);
   boolean goOn;
   int t, len=ArrayExtras.length(s);
 
   for (t=0;t<len;t++)
   {
-   df=FileSystemUtil.getDirAndFilename(FileSystemUtil.adjustPath(directory+File.separator+s[t]));
+   df=FileSystemExtras.getDirAndFilename(FileSystemExtras.adjustPath(directory+File.separator+s[t]));
 
    if (df[0].length()>=dplen)
    {
@@ -667,10 +670,10 @@ public class ResourceExtras
  public static void main(String args[])
  {
   System.out.println("org.gridgain.grid:\n--------------------------------------------------------");
-  StringUtil.systemOut(listResources("org.gridgain.grid", false));
+  StringExtras.systemOut(listResources("org.gridgain.grid", false));
 
   System.out.println("\norg.ansorre.app.silicontamer:\n--------------------------------------------------------");
-  StringUtil.systemOut(listResources("org.ansorre.app.silicontamer", true));
+  StringExtras.systemOut(listResources("org.ansorre.app.silicontamer", true));
  }
 
 */

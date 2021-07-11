@@ -21,7 +21,7 @@ import me.as.lib.core.extra.QSortable;
 import me.as.lib.core.extra.QuickSort;
 import me.as.lib.core.lang.StringExtras;
 import me.as.lib.core.lang.ArrayExtras;
-import me.as.lib.core.lang.MathExtras;
+import me.as.lib.core.math.MathExtras;
 import me.as.lib.core.lang.ObjectExtras;
 import me.as.lib.core.log.Logable;
 import me.as.lib.core.log.LogableHandler;
@@ -1982,7 +1982,7 @@ public class RamTable implements QSortable
      {
       if (r==0)
       {
-       //tmpStr=StringUtil.grantLength(""+(c-1), colSizes[c-1], ' ', true);
+       //tmpStr=StringExtras.grantLength(""+(c-1), colSizes[c-1], ' ', true);
        tmpStr=grantLength(getLogableColumnLabel(c-1), colSizes[c-1], ' ', true);
        log.print(traceLevels, " ");
        log.print(traceLevels, tmpStr);

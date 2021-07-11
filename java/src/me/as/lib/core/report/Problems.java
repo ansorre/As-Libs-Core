@@ -31,6 +31,12 @@ public class Problems extends ArrayList<Problem>
  private Boolean hasShowStoppers=null;
 
 
+ public void clear()
+ {
+  super.clear();
+  hasShowStoppers=null;
+ }
+
  public void addShowStopperNoPrefix(String message)
  {
   add(Type.showstopperNoPrefix,  message);

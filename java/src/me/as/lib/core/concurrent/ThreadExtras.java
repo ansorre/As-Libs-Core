@@ -26,6 +26,7 @@ import java.io.*;
 import java.util.concurrent.atomic.*;
 
 import static me.as.lib.core.lang.ExceptionExtras.systemErrDeepCauseStackTrace;
+import static me.as.lib.core.lang.StringExtras.isBlank;
 import static me.as.lib.core.system.FileSystemExtras.adjustPath;
 import static me.as.lib.core.system.FileSystemExtras.deleteFile;
 import static me.as.lib.core.system.FileSystemExtras.isDirectory;
@@ -247,10 +248,13 @@ public class ThreadExtras
 
  public static void setPathForLogs(String debLogsdir)
  {
+  if (isBlank(debLogsdir))
+   throw new RuntimeException("setPathForLogs with blank 'debLogsdir'");
+
   logsDir=debLogsdir;
   if (logFiles==null && isDirectory(logsDir))
   {
-   logFiles=new HashMap<Thread, RandomAccessFile>();
+   logFiles=new HashMap<>();
   }
  }
 

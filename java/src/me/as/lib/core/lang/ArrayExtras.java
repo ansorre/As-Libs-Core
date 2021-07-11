@@ -21,6 +21,7 @@ import me.as.lib.core.StillUnimplemented;
 import me.as.lib.core.collection.DefaultUniversalIterator;
 import me.as.lib.core.collection.ListHashMap;
 import me.as.lib.core.collection.UniversalIterator;
+import me.as.lib.core.math.RandomExtras;
 
 import java.lang.ref.Reference;
 import java.lang.reflect.Array;
@@ -33,7 +34,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Vector;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -696,7 +696,7 @@ public class ArrayExtras
 
 
  /**
-  * Sets 'newElement' at 'index' of array (or java.util.List) 'array'
+  * Sets 'newElement' at 'index' of array (or java.extra.List) 'array'
   *
   * @param array       the array
   * @param index       at what index newElement shoudl be set
@@ -1481,6 +1481,48 @@ public class ArrayExtras
   {
    Array.set(array, index, null);
    res=purgeNulls(array);
+  }
+
+  return res;
+ }
+
+
+
+ public static boolean contains(Object array[], Object contained)
+ {
+  boolean res=false;
+  int t, len=length(array);
+
+  if (len>0)
+  {
+   for (t=0;t<len && !res;t++)
+   {
+    if (array[t]==null && contained==null) res=true;
+    else
+    {
+     if (contained!=null && array[t]!=null)
+     {
+      res=contained.equals(array[t]);
+     }
+    }
+   }
+  }
+
+  return res;
+ }
+
+
+ public static boolean contains(int values[], int value)
+ {
+  boolean res=false;
+  int len=((values!=null)?values.length:0);
+
+  if (len>0)
+  {
+   for (int t=0;t<len && !res;t++)
+   {
+    res=(values[t]==value);
+   }
   }
 
   return res;

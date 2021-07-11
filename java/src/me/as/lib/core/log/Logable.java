@@ -22,9 +22,9 @@ package me.as.lib.core.log;
  *
  * <p>Description: </p>
  *
- * <p>Compleasy: Copyright (c) 2002</p>
+ * <p>Antonio Sorrentini: Copyright (c) 2002</p>
  *
- * <p>Compleasy: </p>
+ * <p>Antonio Sorrentini: </p>
  *
  * WARNING 1:
  * At the moment the design of tracelevels is weird. It is not clear what

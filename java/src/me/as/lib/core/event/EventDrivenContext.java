@@ -156,8 +156,8 @@ public class EventDrivenContext
  public void removeEventDrivenContextListener(EventDrivenContextListener listener)
  {listenersManager.removeListener(listener);}
 
- Firer firer=new Firer()
- {public void foreachAction(EventListener listener, Object param)
+ Firer firer=new Firer<EventListener, EventObject>()
+ {public void foreachAction(EventListener listener, EventObject param)
   {((EventDrivenContextListener)listener).eventOccurred((EventDrivenContextEvent)param);}};
 
  private void fireEventOccurred(EventDrivenContextEvent e)

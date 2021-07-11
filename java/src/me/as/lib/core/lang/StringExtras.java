@@ -17,8 +17,14 @@
 package me.as.lib.core.lang;
 
 
+import me.as.lib.core.collection.RamTable;
 import me.as.lib.core.extra.BoxFor2;
+import me.as.lib.core.extra.QSortable;
+import me.as.lib.core.extra.QuickSort;
+import me.as.lib.core.extra.QuickSortExtras;
 import me.as.lib.core.extra.TimeCounter;
+import me.as.lib.core.math.MathExtras;
+import me.as.lib.core.math.RandomExtras;
 
 import javax.script.ScriptEngine;
 import java.awt.*;
@@ -31,6 +37,7 @@ import java.text.Normalizer;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
@@ -38,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -46,7 +54,8 @@ import static me.as.lib.core.extra.JavaScriptExtras.newJavaScriptEngine;
 import static me.as.lib.core.lang.ArrayExtras.isArray;
 import static me.as.lib.core.lang.ArrayExtras.isArrayOfPrimitive;
 import static me.as.lib.core.lang.ByteExtras.copyInNew;
-import static me.as.lib.core.lang.RandomExtras.intRandom;
+import static me.as.lib.core.log.LogEngine.logOut;
+import static me.as.lib.core.math.RandomExtras.intRandom;
 
 
 // `This string uses backticks.`;
@@ -60,9 +69,12 @@ public class StringExtras
  public static final String LINE_SEPARATOR=System.getProperty("line.separator");
 
  public static final char noBreakSpace=160;
+ public static final String trimmable=(" \t"+noBreakSpace);
+ public static final String trimmable_and_nl=(trimmable+"\n\r");
 
  public static final String utf8Charset           = "UTF-8";
  public static final String defaultCharsetName    = utf8Charset;
+ public static final String defaultNetworkNewLine = "\r\n";
 
  public static final String considerableTrue[]=new String[]{"true", "yes", "1", "on"};
  public static final String considerableFalse[]=new String[]{"false", "no", "0", "off", "null", "void"};
@@ -178,6 +190,23 @@ public class StringExtras
  }
 
 
+ public static int getCharCount(String str, char ch)
+ {
+  int res=0;
+
+  if (hasChars(str))
+  {
+   int t, len=str.length();
+   for (t=0;t<len;t++)
+   {
+    if (str.charAt(t)==ch) res++;
+   }
+  }
+
+  return res;
+ }
+
+
 
  /**
   * Checks if sequence is not null and has more than 0 chars
@@ -285,6 +314,30 @@ public class StringExtras
 
   return res;
  }
+
+
+ // tested with success
+ public static boolean doesNotContainThoseChars(String str, String charsToBeAvoided)
+ {
+  boolean res=true;
+
+  if (hasChars(str) && hasChars(charsToBeAvoided))
+  {
+   int t, len=str.length();
+
+   res=false;
+
+   for (t=0;t<len && !res;t++)
+   {
+    res=(charsToBeAvoided.indexOf(str.charAt(t))>=0);
+   }
+
+   res=!res;
+  }
+
+  return res;
+ }
+
 
 
 
@@ -552,6 +605,35 @@ public class StringExtras
  {
   return ((str!=null)?str.toLowerCase():null);
  }
+
+
+ public static String[] toUpperCase(String strs[])
+ {
+  if (ArrayExtras.length(strs)>0)
+  {
+   int t, len=ArrayExtras.length(strs);
+
+   for (t=0;t<len;t++)
+    strs[t]=toUpperCase(strs[t]);
+  }
+
+  return strs;
+ }
+
+
+ public static String[] toLowerCase(String strs[])
+ {
+  if (ArrayExtras.length(strs)>0)
+  {
+   int t, len=ArrayExtras.length(strs);
+
+   for (t=0;t<len;t++)
+    strs[t]=toLowerCase(strs[t]);
+  }
+
+  return strs;
+ }
+
 
 
  public static String reverse(String text)
@@ -920,6 +1002,27 @@ public class StringExtras
   return to;
  }
 
+ public static int indexOfFirstAllowedChar(String str, String allowedChars)
+ {
+  return indexOfFirstAllowedChar(str, allowedChars, 0);
+ }
+
+ public static int indexOfFirstAllowedChar(String str, String allowedChars, int startIndex)
+ {
+  int res=-1;
+  int len=length(str);
+
+  if (startIndex<len && hasChars(allowedChars))
+  {
+   for (int t=startIndex;t<len && res==-1;t++)
+   {
+    if (allowedChars.indexOf(str.charAt(t))>=0) res=t;
+   }
+  }
+
+  return res;
+ }
+
 
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
  // Split/Merge/Unmerge
@@ -1198,7 +1301,7 @@ public class StringExtras
 
  /**
   * Replaces the first substring of this string that matches the given <a
-  * href="../util/regex/Pattern.html#sum">regular expression</a> with the
+  * href="../extra/regex/Pattern.html#sum">regular expression</a> with the
   * given replacement.
   *
   * <p> An invocation of this method of the form
@@ -1247,7 +1350,7 @@ public class StringExtras
 
  /**
   * Replaces each substring of this string that matches the given <a
-  * href="../util/regex/Pattern.html#sum">regular expression</a> with the
+  * href="../extra/regex/Pattern.html#sum">regular expression</a> with the
   * given replacement.
   *
   * <p> An invocation of this method of the form
@@ -1311,6 +1414,23 @@ public class StringExtras
   return replace(string, target, replacement, false);
  }
 
+
+ public static String[] replace(String strings[], CharSequence target, CharSequence replacement)
+ {
+  return replace(strings, target, replacement, false);
+ }
+
+ public static String[] replace(String strings[], CharSequence target, CharSequence replacement, boolean onlyOneRound)
+ {
+  int t, len=ArrayExtras.length(strings);
+
+  for (t=0;t<len;t++)
+   strings[t]=replace(strings[t], target, replacement, onlyOneRound);
+
+  return strings;
+ }
+
+
  public static String replace(String string, CharSequence target, CharSequence replacement, boolean onlyOneRound)
  {
   if (hasChars(string))
@@ -1334,6 +1454,23 @@ public class StringExtras
  public static String replace(String str, String currentStrs[], String newStrs[])
  {
   return replace(str, currentStrs, newStrs, false);
+ }
+
+
+ public static String[] replace(String strings[], String currentStrs[], String newStrs[])
+ {
+  return replace(strings, currentStrs, newStrs, false);
+ }
+
+
+ public static String[] replace(String strings[], String currentStrs[], String newStrs[], boolean onlyOneRound)
+ {
+  int t, len=ArrayExtras.length(strings);
+
+  for (t=0;t<len;t++)
+   strings[t]=replace(strings[t], currentStrs, newStrs, onlyOneRound);
+
+  return strings;
  }
 
 
@@ -1477,16 +1614,13 @@ public class StringExtras
 
 
 
-
-
-
-
-
-
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
  // Date/Calendar
 
+ public static final String me_as_DateFormat="EEEEEEEEEEEEEEEEEEE d MMMMMMMMMMMMMMMMM yyyy, H:mm.ss";
+ public static final String fileSystemCompatibleDateTimeFormat="yyyy_MM_dd-HH_mm_ss";
  public static final String speedDateFormat="HH.mm.ss dd/MMM/yyyy";
+ public static final String speedDateFormatForFileNames="dd-MMM-yyyy-HH.mm.ss";
  public static final SimpleDateFormat c2s2cDF=new SimpleDateFormat("yyyy/MM/dd HH:mm:ss:SSSS");
 
  public static final SimpleDateFormat hmDF=new SimpleDateFormat("HH:mm");
@@ -1499,9 +1633,7 @@ public class StringExtras
  public static final SimpleDateFormat dmyDF5=new SimpleDateFormat("dd/MM/yyyy HH:mm");
  public static final SimpleDateFormat dmyDF6=new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
  public static final SimpleDateFormat RSS_pubDate=new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH);
-
  public static final SimpleDateFormat httpTimeFormat=new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-
 
 
  public static String messageNow(String message)
@@ -1681,6 +1813,11 @@ public class StringExtras
  }
 
 
+ public static String speedNowToString(String format)
+ {
+  return speedDateToString(Calendar.getInstance().getTime(), format);
+ }
+
 
  public static String speedNowToString()
  {
@@ -1688,7 +1825,14 @@ public class StringExtras
  }
 
 
-
+/*
+ public static void main(String args[])
+ {
+  Date d=new Date();
+  String sss=speedDateToString(d, me_as_DateFormat);
+  logOut.println(speedStringToDate(sss, me_as_DateFormat));
+ }
+*/
 
  public static Date speedStringToDate(String dt)
  {
@@ -1698,7 +1842,7 @@ public class StringExtras
   {
    SimpleDateFormat formatter=new SimpleDateFormat(speedDateFormat);
    res=formatter.parse(dt);
-  } catch (Throwable tr){}
+  } catch (Throwable ignore){}
 
   return res;
  }
@@ -1710,9 +1854,10 @@ public class StringExtras
 
   try
   {
-   SimpleDateFormat formatter=new SimpleDateFormat(format);
+   SimpleDateFormat formatter=new SimpleDateFormat(format, Locale.ENGLISH);
    res=formatter.parse(dt);
-  } catch (Throwable tr){}
+  }
+  catch (Throwable ignore){}
 
   return res;
  }
@@ -1796,6 +1941,7 @@ public class StringExtras
  public static final String hexChars="0123456789abcdef".intern();
  public static final String digits="0123456789".intern();
  public static final String lowerLetters="abcdefghijklmnopqrstuvwxyz".intern();
+ public static final String lowerLettersDigits=(lowerLetters+digits).intern();
  public static final String upperLetters="ABCDEFGHIJKLMNOPQRSTUVWXYZ".intern();
  public static final String letters=(upperLetters+lowerLetters).intern();
  public static final String lettersDigits=(letters+digits).intern();
@@ -1895,62 +2041,36 @@ public class StringExtras
  }
 
 
- // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
- // Remove/Discard
 
- public static String[] removeNullAndEmptyAndBlank(String str[])
+
+
+
+ public static String generateRandomPassword(int len)
  {
-  String res[]=null;
+  return generateRandomPassword(len, false);
+ }
 
-  if (str!=null)
-  {
-   int t, len=str.length;
-
-   if (len>0)
-   {
-    ArrayList v=new ArrayList();
-
-    for (t=0;t<len;t++) if (isNotBlank(str[t])) v.add(str[t]);
-
-    res=(String[])v.toArray(new String[v.size()]);
-   }
-  }
-
-  return res;
+ public static String generateRandomPassword(int len, boolean easy)
+ {
+  return generateRandomPassword(len, (easy ? unambiguousChars : charsOkForPasswords));
  }
 
 
- public static String[] removeNullAndEmpty(String str[])
+ public static String generateRandomPassword(int len, String allowedChars)
  {
-  String res[]=null;
+  StringBuilder sb=new StringBuilder();
+  Random rnd=RandomExtras.newRandomNumberGenerator();
+  int allowedCharsLen=allowedChars.length();
 
-  if (str!=null)
+  for (int t=0;t<len;t++)
   {
-   int t, len=str.length;
-
-   if (len>0)
-   {
-    String tmpStr;
-    ArrayList al=new ArrayList();
-
-    for (t=0;t<len;t++)
-    {
-     tmpStr=str[t];
-     if (tmpStr!=null)
-     {
-      if (tmpStr.length()>0)
-      {
-       al.add(tmpStr);
-      }
-     }
-    }
-
-    res=(String[])al.toArray(new String[al.size()]);
-   }
+   sb.append(allowedChars.charAt(rnd.nextInt(allowedCharsLen)));
   }
 
-  return res;
+  return sb.toString();
  }
+
+
 
 
 
@@ -2109,9 +2229,24 @@ public class StringExtras
   }
 
   String regexPattern=globToRegex(match_mask);
+
+  if (areEqual(regexPattern, match_mask))
+  {
+   if (!caseSensitive)
+   {
+    test=toLowerCase(test);
+    match_mask=toLowerCase(match_mask);
+   }
+
+   return areEqual(test, match_mask);
+  }
+  else
+   regexPattern="^"+regexPattern+"$";
+
   int flags=Pattern.MULTILINE;
 
-  if (!caseSensitive) flags&=Pattern.CASE_INSENSITIVE;
+  if (!caseSensitive)
+   flags|=Pattern.CASE_INSENSITIVE;
 
   return doTheyRegexMatch(test, regexPattern, flags);
  }
@@ -2377,7 +2512,7 @@ public class StringExtras
  }
 
 
- public static String monBlankOrThat(CharSequence s, CharSequence that)
+ public static String nonBlankOrThat(CharSequence s, CharSequence that)
  {
   if (isNotBlank(s)) return s.toString();
   else return (that==null ? null : that.toString());
@@ -2423,7 +2558,7 @@ public class StringExtras
 
  private static final String _illegal_conv_arg="%f cuold not convert to '%t' the supplied 'str' (%s)";
  private static final String _illegal_conv_arg_phs[]=new String[]{"%f", "%t", "%s"};
- private static final String _bad_type_="StringUtil.$ called with invalid value type";
+ private static final String _bad_type_="StringExtras.$ called with invalid value type";
 
 
 
@@ -3247,21 +3382,406 @@ public class StringExtras
  }
 
 
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // removing chars
+
+ public static String removeChars(String str, String charsToRemove)
+ {
+  String res;
+
+  if (hasChars(str) && hasChars(charsToRemove))
+  {
+   StringBuilder sb=new StringBuilder();
+   char ch;
+   int t, len=length(str);
+
+   for (t=0;t<len;t++)
+   {
+    ch=str.charAt(t);
+    if (charsToRemove.indexOf(ch)<0) sb.append(ch);
+   }
+
+   res=sb.toString();
+  } else res=str;
+
+  return res;
+ }
+
+
+
+ public static String[] removeChars(String str[], String charsToRemove)
+ {
+  int t, len=ArrayExtras.length(str);
+  for (t=0;t<len;t++) str[t]=removeChars(str[t], charsToRemove);
+  return str;
+ }
+
+
+
+ public static String[] removeChars(String str[])
+ {
+  int t, len=ArrayExtras.length(str);
+  for (t=0;t<len;t++) str[t]=removeTrimmables(str[t]);
+  return str;
+ }
+
+
+ public static String removeTrimmables(String str)
+ {
+  return removeChars(str, trimmable);
+ }
+
+
+
+
+ public static String removeLastChars(String str, int howManyChars)
+ {
+  return str.substring(0, str.length()-howManyChars);
+ }
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Captcha
+
+
+
+ public static boolean isEqualToCaptcha(String str, String captchaString, boolean severeVerify)
+ {
+  boolean res=false;
+
+  if (severeVerify) res=areEqual(str, captchaString);
+  else res=areEqual(removeTrimmables(str), removeTrimmables(captchaString), false);
+
+  return res;
+ }
+
+
+
+
+
+ public static String generateCaptchaString(int len)
+ {
+  StringBuilder sb=new StringBuilder();
+  Random rnd=RandomExtras.newRandomNumberGenerator();
+  int length=unambiguousChars.length();
+
+  for (int t=0;t<len;t++)
+  {
+   sb.append(unambiguousChars.charAt(rnd.nextInt(length)));
+  }
+
+  return sb.toString();
+ }
+
+
+
+ // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ // Sort
+
+ // types of sorts for 'public static String[] sort(String items[], int sortType)'
+ public static final int GSCAT_BYINT         = 1;
+ public static final int GSCAT_BYENCLOSEDINT = 2;
+ public static final int GSCAT_BYSTRING      = 3;
+ public static final int GSCAT_BYLENGTH      = 4;
+
+
+
+ public static String[] sort(String items[])
+ {
+  return QuickSortExtras.sort(items);
+ }
+
+
+
+ /**
+  *
+  * @param items
+  * @param sortType this can be:<br>
+  * GSCAT_BYINT:<br>
+  * Every children has a name parsable as an int. Children are sorted according to these int values<br><br>
+  *
+  * GSCAT_BYENCLOSEDINT:<br>
+  * Every children has a name that include an int. Children are sorted according to these int values.<br>
+  * Valid samples are:<br>
+  * '[100] my name' ---> would be considered as 100 while sorting by int<br>
+  * '25 - a name' ---> would be considered as 25 while sorting by int<br>
+  * '123 321 124' ---> would be considered as 123 while sorting by int<br>
+  * 'You are 73 years old' ---> would be considered as 73 while sorting by int<br>
+  * 'His age is 12' ---> would be considered as 12 while sorting by int<br>
+  * 'We have 12,234 dollars in the cash' ---> would be considered as 12 while sorting by int<br><br>
+  *
+  * GSCAT_BYSTRING:<br>
+  * Children are sorted by their string values according to the current charset<br><br>
+  *
+  * @return the same array of strings but sorted
+  */
+ public static String[] sort(String items[], int sortType)
+ {
+  int len=ArrayExtras.length(items);
+
+  if (len>0)
+  {
+   switch (sortType)
+   {
+    case GSCAT_BYINT:
+    {
+     items=QuickSortExtras.sortStrictIntegersInStrings(items);
+    } break;
+
+    case GSCAT_BYENCLOSEDINT:
+    {
+     items=QuickSortExtras.sortIntegersEnclosedInStrings(items);
+    } break;
+
+    case GSCAT_BYSTRING:
+    {
+     items=sort(items);
+    } break;
+
+    case GSCAT_BYLENGTH:
+    {
+     items=sortByLength(items);
+    } break;
+
+    default:throw new RuntimeException("StringExtras.sort(...) invoked with invalid sortType value (it was: "+sortType+")");
+   }
+  }
+
+  return items;
+ }
+
+
+
+
+ public static String[] sortByLength(final String s[])
+ {
+  if (ArrayExtras.length(s)>1)
+  {
+   new QuickSort(new QSortable()
+   {
+    String mid;
+    int midLen;
+
+    public void setMid(int mididx, Object params)
+    {
+     mid=s[mididx];
+     midLen=length(mid);
+    }
+
+    // must return:
+    // <0 if elem1<mid
+    // 0 if elem1==mid
+    // >0 if elem1>mid
+    public int compareToMid(int elem1, Object params)
+    {
+     int e1l=length(s[elem1]);
+     if (e1l<midLen) return 1;
+     if (e1l>midLen) return -1;
+     return 0;
+    }
+
+
+    public boolean swap(int elem1, int elem2, Object params)
+    {
+     String swap=s[elem1];
+     s[elem1]=s[elem2];
+     s[elem2]=swap;
+     return true;
+    }
+   }, 0, ArrayExtras.length(s)-1, null);
+  }
+
+  return s;
+ }
+
+
+
+
+
 
 
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
  // Other
 
 
+
+ public static String equallySeparate(String str, int sepLen, String separator)
+ {
+  if (hasChars(str))
+  {
+   StringBuilder separated;
+   int  t1;
+   int z;
+
+   z=0;
+   t1=str.length()-1;
+
+   while (t1>=0)
+   {
+    z++;
+
+    if (z==sepLen && t1!=0)
+    {
+     separated=new StringBuilder();
+     separated.append(str, 0, t1);
+     separated.append(separator);
+     separated.append(str, t1, str.length());
+     str=separated.toString();
+     z=0;
+    }
+
+    t1--;
+   }
+  }
+
+  return str;
+ }
+
+
+
+ /**
+  * WARNING: null strings are REMOVED !
+  */
+ public static String[] discardDuplicatedStrings(String str[])
+ {
+  String res[]=null;
+
+  if (ArrayExtras.length(str)>0)
+  {
+   ArrayList<String> v=new ArrayList<>();
+   int t, len=str.length;
+
+   for (t=0;t<len;t++)
+   {
+    if (str!=null)
+    {
+     if (!v.contains(str[t])) v.add(str[t]);
+    }
+   }
+
+   res=v.toArray(new String[v.size()]);
+  }
+
+  return res;
+ }
+
+
+ public static String[] duplicate(String str[])
+ {
+  String res[]=null;
+
+  if (str!=null)
+  {
+   int t, len=str.length;
+   if (len>0)
+   {
+    res=new String[len];
+    for (t=0;t<len;t++)
+    {
+     if (str[t]==null) res[t]=null;
+     else res[t]=str[t];
+    }
+   } else res=new String[0];
+  }
+
+  return res;
+ }
+
+
+
+ public static String escapeChar(String str, char charToEscape, char escaperChar)
+ {
+  if (!hasChars(str)) return str;
+
+  StringBuilder sb=new StringBuilder();
+  int prevIdx=-1;
+  int idx;
+
+  do
+  {
+   idx=str.indexOf(charToEscape, prevIdx+1);
+   if (prevIdx==-1) prevIdx=0;
+
+   if (idx>=0)
+   {
+    if (idx>0) sb.append(str, prevIdx, idx);
+    sb.append(escaperChar);
+    prevIdx=idx;
+   } else sb.append(str.substring(prevIdx));
+
+  } while (idx>=0);
+
+  return sb.toString();
+ }
+
+
+ public static String getAStringOfChar(int numOfChars, char theChar)
+ {
+  if (numOfChars==0) return "";
+  StringBuilder sb=new StringBuilder();
+  int t=0;
+
+  while (t<numOfChars)
+  {
+   sb.append(theChar);
+   t++;
+  }
+
+  return sb.toString();
+ }
+
+
+
+ public static String interweave(String... strings)
+ {
+  StringBuilder res=new StringBuilder();
+  int t, len=ArrayExtras.length(strings);
+
+  if (len>0)
+  {
+   boolean nothingAdded;
+   int idx=0;
+
+   do
+   {
+    nothingAdded=false;
+
+    for (t=0;t<len;t++)
+    {
+     if (strings[t].length()>idx)
+     {
+      res.append(strings[t].charAt(idx));
+      nothingAdded=true;
+     }
+    }
+
+    idx++;
+   } while (nothingAdded);
+  }
+
+  return res.toString();
+ }
+
+
+
+
+
+
  public static String toBase64(String text)
  {
-  try
+  if (!hasChars(text))
+   return text;
+  else
   {
-   return Base64.getEncoder().encodeToString(text.getBytes(defaultCharsetName));
-  }
-  catch (Throwable tr)
-  {
-   throw new RuntimeException(tr);
+   try
+   {
+    return Base64.getEncoder().encodeToString(text.getBytes(defaultCharsetName));
+   }
+   catch (Throwable tr)
+   {
+    throw new RuntimeException(tr);
+   }
   }
  }
 
@@ -3385,7 +3905,7 @@ public class StringExtras
 
  public static String[] toTrimmedLines(String str)
  {
-  return removeNullAndEmpty(betterTrim(toLines(str)));
+  return purgeNullsAndEmpties(betterTrim(toLines(str)));
  }
 
 
@@ -3434,6 +3954,130 @@ public class StringExtras
 
   return res;
  }
+
+
+
+
+
+
+ /**
+  * WARNING: this is very simplicistic method, does not make a lot of things:
+  * 1) does not evaluate escaped "
+  * 2) works only when separator is , or ;
+  *
+  * @param csvText
+  * @return
+  */
+ public static RamTable quickCsvToRamTable(String csvText, boolean skipFirstRow, int... toLowerCaseCols)
+ {
+  int comma=StringExtras.getCharCount(csvText, ',');
+  int semicolon=StringExtras.getCharCount(csvText, ';');
+  String splitChar=((comma>semicolon) ? "," : ";");
+
+  String values[], csvTextLines[]=toTrimmedLines(csvText);
+  RamTable res=new RamTable();
+  int c, clen, t, len=ArrayExtras.length(csvTextLines);
+
+  for (t=0;t<len;t++)
+  {
+   values=StringExtras.betterTrimNl(replace(csvTextLines[t].split(splitChar), "\"", null));
+   clen=ArrayExtras.length(values);
+
+   for (c=0;c<clen;c++)
+   {
+    res.setString(c, t, values[c]);
+   }
+  }
+
+  if (skipFirstRow && res.getRowsCount()>0)
+   res.cutRows(0, 1);
+
+  len=ArrayExtras.length(toLowerCaseCols);
+
+  for (t=0;t<len;t++)
+  {
+   c=toLowerCaseCols[t];
+   int r, rows=res.getRowsCount();
+   for (r=0;r<rows;r++) res.setString(c, r, res.getString(c, r).toLowerCase());
+  }
+
+  return res;
+ }
+
+
+
+
+
+
+
+
+
+ public static String[] purgeNullsAndEmpties(String strs[])
+ {
+  return purge(strs, true, true, false);
+ }
+
+
+ public static String[] purgeNullsAndEmptiesAndBlanks(String strs[])
+ {
+  return purge(strs, true, true, true);
+ }
+
+
+ public static String[] purge(String strs[], boolean nulls, boolean empties, boolean blanks)
+ {
+  int t, len=ArrayExtras.length(strs);
+
+  if (len>0)
+  {
+   boolean isNull, isEmpty, isBlank;
+   ArrayList l=new ArrayList();
+
+   for (t=0;t<len;t++)
+   {
+    isNull=(strs[t]==null);
+    isEmpty=(!hasChars(strs[t]));
+    isBlank=isBlank(strs[t]);
+
+    if ((!isNull || !nulls) &&
+        (!isEmpty || !empties) &&
+        (!isBlank || !blanks))
+     l.add(strs[t]);
+   }
+
+   strs=ArrayExtras.toArrayOfStrings(l);
+  }
+
+  return strs;
+ }
+
+/*
+ // purge success tests
+ public static void main(String args[])
+ {
+  String ss[]=new String[]
+  {
+   "pippo",
+   null,
+   "",
+   "  ",
+   "ciro"
+  };
+
+  logOut.println(purge(ss, true, false, false));
+  logOut.println("---------------------------");
+  logOut.println(purge(ss, false, true, false));
+  logOut.println("---------------------------");
+  logOut.println(purge(ss, false, false, true));
+  logOut.println("---------------------------");
+  logOut.println(purge(ss, true, true, true));
+  logOut.println("---------------------------");
+  logOut.println(purge(ss, true, true, false));
+ }
+*/
+
+
+
 
 
  public static String purgeComments(String txt, String singleLineComment, String multiLineCommentBegin, String multiLineCommentEnd, String stringsDelimiters, Character stringsDelimitersEscapeChar)

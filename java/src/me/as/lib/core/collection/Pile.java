@@ -30,6 +30,7 @@ public abstract class Pile<E>
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
  protected int defaultIncrement=builtinDefaultIncrement;
  protected Object elements[];
+ protected int initCapacity;
 
 
  public Pile()
@@ -39,6 +40,7 @@ public abstract class Pile<E>
 
  public Pile(int initCapacity)
  {
+  this.initCapacity=initCapacity;
   elements=new Object[initCapacity];
  }
 
@@ -75,6 +77,8 @@ public abstract class Pile<E>
    elements[t]=null;
    onElementRemoved((E)element);
   }
+
+  elements=new Object[initCapacity];
  }
 
 

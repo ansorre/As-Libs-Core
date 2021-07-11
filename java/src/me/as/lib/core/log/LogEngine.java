@@ -27,15 +27,11 @@ public class LogEngine
  public static final Logable logErr;
 
  // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
- private static final String thisClass="com.compleasy.lib.log.LogEngine";
- private static final String originalSystemOut_key=thisClass+".originalSystemOut";
- private static final String originalSystemErr_key=thisClass+".originalSystemErr";
- private static final String systemOutWrapper_key=thisClass+".systemOutWrapper";
- private static final String systemErrWrapper_key=thisClass+".systemErrWrapper";
- private static final String compleasyOut_key=thisClass+".compleasyOut";
- private static final String compleasyErr_key=thisClass+".compleasyErr";
- private static final String compleasyOutPrintStream_key=thisClass+".compleasyOutPrintStream";
- private static final String compleasyErrPrintStream_key=thisClass+".compleasyErrPrintStream";
+ private static final String thisClass="me.as.lib.core.log.LogEngine";
+// private static final String originalSystemOut_key=thisClass+".originalSystemOut";
+// private static final String originalSystemErr_key=thisClass+".originalSystemErr";
+// private static final String systemOutWrapper_key=thisClass+".systemOutWrapper";
+// private static final String systemErrWrapper_key=thisClass+".systemErrWrapper";
 
  private static Logable systemOutWrapper;
  private static Logable systemErrWrapper;

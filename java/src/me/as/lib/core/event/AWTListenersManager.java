@@ -38,7 +38,7 @@ import java.awt.*;
  {listenersManager.removeListener(listener);}
 
  Firer firer=new Firer()
- {public void foreachAction(EventListener listener, Object param)
+ {public void foreachAction(EventListener listener, EventObject param)
   {((_xxx_Listener)listener)._Xxx_EventOccurred((_xxx_Event)param);}};
 
  public void fire_xxx_EventOccurred(_xxx_Event e)
@@ -49,11 +49,11 @@ import java.awt.*;
 */
 
 
-public class AWTListenersManager extends BasicListenersManager
+public class AWTListenersManager<L extends EventListener, E extends EventObject> extends BasicListenersManager<L, E>
 {
- public static final Fifo<BoxFor3> awtCache=new Fifo<BoxFor3>();
+ public static final Fifo<BoxFor3> awtCache=new Fifo<>();
 
- public static ArrayList<JComponent> toBeRepaintedImmediately=new ArrayList<JComponent>();
+ public static ArrayList<JComponent> toBeRepaintedImmediately=new ArrayList<>();
  private static Dimension sizeCache=new Dimension();
 
 
@@ -78,7 +78,7 @@ public class AWTListenersManager extends BasicListenersManager
    BoxFor3 to;
    AWTListenersManager man;
    Firer firer;
-   Object param;
+   EventObject param;
    int t, len=tos.size();
 
 //   System.out.println("tos.size(): "+tos.size());
@@ -88,7 +88,7 @@ public class AWTListenersManager extends BasicListenersManager
     to=tos.get(t);
     man=(AWTListenersManager)to.element1;
     firer=(Firer)to.element2;
-    param=to.element3;
+    param=(EventObject)to.element3;
 
 
 /*
@@ -136,42 +136,34 @@ public class AWTListenersManager extends BasicListenersManager
  }
 
 
- static Runnable hopeForRepainting=new Runnable()
- {
-  public void run()
-  {
-
-  }
- };
+ static Runnable hopeForRepainting=() -> {};
 
  static
  {
-  Thread tt=new Thread(new Runnable()
+  Thread tt=new Thread(() ->
   {
-   public void run()
-   {
-    ArrayList<BoxFor3> tos=new ArrayList<BoxFor3>();
-    BoxFor3 to;
-    AWTDispatcher awtDispatcher=new AWTDispatcher();
+   ArrayList<BoxFor3> tos=new ArrayList<>();
+   BoxFor3 to;
+   AWTDispatcher awtDispatcher=new AWTDispatcher();
 
-    do
-    {
-     to=awtCache.getWaiting();
+   do
+   {
+    to=awtCache.getWaiting();
 
 //          int debug=awtCache.size();
 //          System.out.println("------> awtCache.size(): "+(debug+1));
 
-     try
-     {
-      tos.add(to);
+    try
+    {
+     tos.add(to);
 
-      int howMany=2;
-      int size=awtCache.size();
-      if (size>100) howMany=1000;
-      else if (size>50) howMany=75;
-      else if (size>25) howMany=35;
-      else if (size>5) howMany=7;
-      awtCache.getSomeRemoving(howMany, tos);
+     int howMany=2;
+     int size=awtCache.size();
+     if (size>100) howMany=1000;
+     else if (size>50) howMany=75;
+     else if (size>25) howMany=35;
+     else if (size>5) howMany=7;
+     awtCache.getSomeRemoving(howMany, tos);
 
 
 //      Enumeration<BoxFor3> etos=awtCache.getAllAndClear();
@@ -179,21 +171,21 @@ public class AWTListenersManager extends BasicListenersManager
 
 
 /*
-      //debug
-      int t, len=tos.size();
-      for (t=0;t<len;t++)
+     //debug
+     int t, len=tos.size();
+     for (t=0;t<len;t++)
+     {
+      try
       {
-       try
-       {
-        IBEvent ibe=(IBEvent)((BoxFor3)tos.get(t)).third;
-        boolean debug=ibe.getContract().m_symbol.equals("EUR.USD") && ibe.getField()==0 && ibe.getID()==IBEvent.IBE_tickSize;
-        if (debug) System.out.println("bid size: "+ibe.getSize()+"    ^3b^");
-       }
-       catch (Throwable tr)
-       {
-        //        tr.printStackTrace();
-       }
+       IBEvent ibe=(IBEvent)((BoxFor3)tos.get(t)).third;
+       boolean debug=ibe.getContract().m_symbol.equals("EUR.USD") && ibe.getField()==0 && ibe.getID()==IBEvent.IBE_tickSize;
+       if (debug) System.out.println("bid size: "+ibe.getSize()+"    ^3b^");
       }
+      catch (Throwable tr)
+      {
+       //        tr.printStackTrace();
+      }
+     }
 */
 
 
@@ -201,21 +193,20 @@ public class AWTListenersManager extends BasicListenersManager
 //      TimeCounter tc=TimeCounter.start();
 
 
-      awtDispatcher.setList(tos);
-      SwingUtilities.invokeAndWait(awtDispatcher);
-      SwingUtilities.invokeAndWait(hopeForRepainting);
+     awtDispatcher.setList(tos);
+     SwingUtilities.invokeAndWait(awtDispatcher);
+     SwingUtilities.invokeAndWait(hopeForRepainting);
 
 //      tc.stop();if (tc.getElapsed()>100) System.out.println("--- tos.size: "+tos.size()+" ---> "+tc.getElapsedString());
 
-     }
-     catch (Throwable tr)
-     {
-      tr.printStackTrace();
-     }
+    }
+    catch (Throwable tr)
+    {
+     tr.printStackTrace();
+    }
 
-     tos.clear();
-    } while (true);
-   }
+    tos.clear();
+   } while (true);
   }, "IBWrapper.EventDispatcher_Thread");
 
   tt.setDaemon(true);
@@ -233,14 +224,14 @@ public class AWTListenersManager extends BasicListenersManager
 
 
 
- private int super_foreachListener(final Firer firer, final Object param)
+ private int super_foreachListener(final Firer<L, E> firer, final E param)
  {
   return super.foreachListener(firer, param);
  }
 
 
  // returns the same number that getListenersCount() would
- public int foreachListener(final Firer firer, final Object param)
+ public int foreachListener(final Firer<L, E> firer, final E param)
  {
   int len=listeners.size();
 
@@ -280,14 +271,14 @@ public class AWTListenersManager extends BasicListenersManager
 
 
 
- public Object super_foreachListener(AnsweredFirer firer, Object param, EventListener listenerThatMustAnswer)
+ public Object super_foreachListener(AnsweredFirer firer, EventObject param, L listenerThatMustAnswer)
  {
   return super.foreachListener(firer, param, listenerThatMustAnswer);
  }
 
 
  // returns the answer from listenerThatMustAnswer
- public Object foreachListener(final AnsweredFirer firer, final Object param, final EventListener listenerThatMustAnswer)
+ public Object foreachListener(final AnsweredFirer firer, final EventObject param, final L listenerThatMustAnswer)
  {
   Object res=null;
   int len=listeners.size();

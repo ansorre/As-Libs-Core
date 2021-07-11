@@ -19,6 +19,7 @@ package me.as.lib.core.log;
 
 import me.as.lib.core.lang.ArrayExtras;
 import me.as.lib.core.lang.ExceptionExtras;
+import me.as.lib.core.lang.StringExtras;
 
 import java.io.*;
 import java.util.*;
@@ -78,9 +79,23 @@ public class LogableHandler implements Logable
    this.ps=ps;
   }
 
+  private boolean wasSLF4J=false;
+
   public void print(String str)
   {
-   if (!closed) ps.print(str);
+   if (LoggingExtras.avoid_all_slf4j_Logging)
+   {
+    boolean isSLF4J=str.startsWith("SLF4J:");
+    if (isSLF4J || (wasSLF4J && ("\r\n".equals(str) || "\n".equals(str))))
+    {
+     if (isSLF4J) wasSLF4J=true;
+     return;
+    }
+   }
+
+   wasSLF4J=false;
+   if (!closed && StringExtras.length(str)>0)
+    ps.print(str);
   }
 
   public void flush()
@@ -207,7 +222,7 @@ public class LogableHandler implements Logable
 
    if (!redirectedExclusivelyToAttached)
    {
-    if (ml!=null) ml.print(ExceptionExtras.printStackTrace(tr));
+    if (ml!=null) ml.print(ExceptionExtras.getStackTrace(tr));
     else tr.printStackTrace();
    }
 

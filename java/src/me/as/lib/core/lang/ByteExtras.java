@@ -18,9 +18,11 @@ package me.as.lib.core.lang;
 
 
 import me.as.lib.core.collection.RamTable;
+import me.as.lib.core.extra.Box;
 import me.as.lib.core.io.BytesRoom;
-import me.as.lib.core.io.util.MemBytesRoom;
-import me.as.lib.core.io.util.SpeedBytesWrapper;
+import me.as.lib.core.io.extra.MemBytesRoom;
+import me.as.lib.core.io.extra.SpeedBytesWrapper;
+import me.as.lib.core.math.MathExtras;
 
 import java.io.*;
 import java.io.IOException;
@@ -277,6 +279,11 @@ public class ByteExtras
 
  public static byte[] replaceAll(byte src[], byte current[], byte newBytes[])
  {
+  return replaceAll(src, current, newBytes, null);
+ }
+
+ public static byte[] replaceAll(byte src[], byte current[], byte newBytes[], Box<Integer> count)
+ {
   byte res[]=src;
 
   if (isNotEmpty(src) && isNotEmpty(current))
@@ -290,13 +297,16 @@ public class ByteExtras
     if (idx>=0)
     {
      res=replace(res, current, newBytes);
+
+     if (count!=null)
+      count.element++;
     }
    } while (idx>=0);
-
   }
 
   return res;
  }
+
 
  public static byte[] replace(byte src[], byte current[], byte newBytes[])
  {
@@ -329,7 +339,7 @@ public class ByteExtras
      {
       baos.write(src, idx+clen, slen-(idx+clen));
      }
-    } catch (Throwable tr){}
+    } catch (Throwable ignore){}
 
     res=baos.toByteArray();
    }

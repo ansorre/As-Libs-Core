@@ -35,7 +35,7 @@ import static me.as.lib.core.lang.ExceptionExtras.systemErrDeepCauseStackTrace;
  {listenersManager.removeListener(listener);}
 
  Firer firer=new Firer()
- {public void foreachAction(EventListener listener, Object param)
+ {public void foreachAction(EventListener listener, EventObject param)
   {((_xxx_Listener)listener)._Xxx_EventOccurred((_xxx_Event)param);}};
 
  public void fire_xxx_EventOccurred(_xxx_Event e)
@@ -46,16 +46,16 @@ import static me.as.lib.core.lang.ExceptionExtras.systemErrDeepCauseStackTrace;
 */
 
 
-public class BasicListenersManager
+public class BasicListenersManager<L extends EventListener, E extends EventObject>
 {
- protected LinkedList<EventListener> listeners=new LinkedList<>();
+ protected LinkedList<L> listeners=new LinkedList<>();
 
- public synchronized void addListener(EventListener listener)
+ public synchronized void addListener(L listener)
  {
   if (!listeners.contains(listener)) listeners.add(listener);
  }
 
- public synchronized void removeListener(EventListener listener)
+ public synchronized void removeListener(L listener)
  {
   listeners.remove(listener);
  }
@@ -83,15 +83,15 @@ public class BasicListenersManager
  }
 
  @SuppressWarnings("unchecked")
- public synchronized List<EventListener> getListenersList()
+ public synchronized List<L> getListenersList()
  {
-  return (List<EventListener>)listeners.clone();
+  return (List<L>)listeners.clone();
  }
 
 
- public synchronized EventListener[] getListenersArray()
+ public synchronized L[] getListenersArray()
  {
-  return listeners.toArray(new EventListener[]{});
+  return (L[])listeners.toArray(new EventListener[]{});
  }
 
 
@@ -100,15 +100,15 @@ public class BasicListenersManager
 
 
  // returns the same number that getListenersCount() would
- public int foreachListener(Firer firer, Object param)
+ public int foreachListener(Firer<L, E> firer, E event)
  {
-  LinkedList al;
+  LinkedList<L> al;
 
   synchronized (this)
   {
    // we need a copy because a listener could remove from
    // the list during the hanfling of the event!
-   al=(LinkedList)listeners.clone();
+   al=(LinkedList<L>)listeners.clone();
   }
 
   int t, len=al.size();
@@ -119,7 +119,7 @@ public class BasicListenersManager
    {
     try
     {
-     firer.foreachAction((EventListener)al.get(t), param);
+     firer.foreachAction((L)al.get(t), event);
     }
     catch (Throwable tr)
     {
@@ -133,7 +133,7 @@ public class BasicListenersManager
  }
 
  // returns the answer from listenerThatMustAnswer
- public Object foreachListener(AnsweredFirer firer, Object param, EventListener listenerThatMustAnswer)
+ public Object foreachListener(AnsweredFirer firer, EventObject param, L listenerThatMustAnswer)
  {
   LinkedList al;
 
@@ -149,12 +149,12 @@ public class BasicListenersManager
 
   if (len>0)
   {
-   EventListener currentFiredListener;
+   L currentFiredListener;
    Object tmpRes;
 
    for (t=0;t<len;t++)
    {
-    currentFiredListener=(EventListener)al.get(t);
+    currentFiredListener=(L)al.get(t);
     tmpRes=firer.foreachAction(currentFiredListener, param);
     if (listenerThatMustAnswer!=null && currentFiredListener.equals(listenerThatMustAnswer))
     {

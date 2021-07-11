@@ -782,7 +782,7 @@ public class ClassExtras implements Types
  public static List<Class> getAllClassesInPackage(String packagePath, boolean alsoFromSubPackages)
  {
   // INITIAL time: 2s 569ms
-  // and now: 120ms  WOW!!!!!! (I strongly modified for speed ResourcesUtil.listResources)
+  // and now: 120ms  WOW!!!!!! (I strongly modified for speed ResourceExtras.listResources)
 
   //  TimeCounter tc=TimeCounter.start();
 
@@ -1205,7 +1205,7 @@ public class ClassExtras implements Types
     Method m=c.getMethod("main", String[].class);
     int modifiers=m.getModifiers();
     res=(Modifier.isPublic(modifiers) && Modifier.isStatic(modifiers));
-   } catch (Throwable tr){}
+   } catch (Throwable ignore){}
   }
 
   return res;
@@ -1587,6 +1587,19 @@ public class ClassExtras implements Types
   return res;
  }
 
+
+
+ public static Field getDeclaredField(Class clazz, String fieldName)
+ {
+  try
+  {
+   return clazz.getDeclaredField(fieldName);
+  }
+  catch (Throwable tr)
+  {
+   throw new RuntimeException(tr);
+  }
+ }
 
 
  public static <R> R getFieldValue_defaultValue(Object source, String fieldName, R defaultValue)

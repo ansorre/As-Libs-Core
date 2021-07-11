@@ -20,10 +20,12 @@ package me.as.lib.core.system;
 import me.as.lib.core.StillUnimplemented;
 
 import javax.swing.filechooser.*;
+import java.awt.*;
 import java.io.*;
 import java.util.Scanner;
 
 import static me.as.lib.core.lang.ClassExtras.classExists;
+import static me.as.lib.core.lang.ExceptionExtras.systemErrDeepCauseStackTrace;
 import static me.as.lib.core.lang.ResourceExtras.loadPackagedFile;
 import static me.as.lib.core.system.FileSystemExtras.adjustPath;
 import static me.as.lib.core.system.FileSystemExtras.deleteFile;
@@ -284,7 +286,7 @@ public class OSExtras
      String td=grantUserTemporaryDirectory();
      nativeHelper=adjustPath(td+File.separator+"winutil.exe");
      deleteFile(nativeHelper);
-     saveInFile(nativeHelper, loadPackagedFile("/com/compleasy/lib/resource/native/winutils.exe"));
+     saveInFile(nativeHelper, loadPackagedFile("/me/as/lib/core2/resource/native/winutils.exe"));
     }
     else
     {
@@ -297,6 +299,26 @@ public class OSExtras
  }
 
 
+ public static void openTheFileFolderWithDefaultSystemExplorerAndHighlightTheFileItself(String file)
+ {
+  if (isSomeMicrosoftWindows())
+  {
+   try
+   {
+    Runtime.getRuntime().exec("explorer.exe /select," + file);
+   }
+   catch (Throwable tr)
+   {
+    systemErrDeepCauseStackTrace(tr);
+   }
+  }
+  else
+  {
+   throw new StillUnimplemented();
+  }
+ }
+
+
  public static void openTheFileWithDefaultSystemApplication(String file)
  {
   if (isSomeMicrosoftWindows())
@@ -305,9 +327,17 @@ public class OSExtras
   }
   else
   {
-   throw new StillUnimplemented();
+   try
+   {
+    Desktop.getDesktop().open(new File(file));
+   }
+   catch (Throwable tr)
+   {
+    systemErrDeepCauseStackTrace(tr);
+   }
   }
  }
+
 
  public static String readConsoleLine()
  {

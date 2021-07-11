@@ -17,6 +17,8 @@
 package me.as.lib.core.lang;
 
 
+import me.as.lib.core.math.MathExtras;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;

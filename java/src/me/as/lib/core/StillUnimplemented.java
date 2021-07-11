@@ -26,7 +26,7 @@ public class StillUnimplemented extends RuntimeException
 
  public StillUnimplemented()
  {
-  super();
+  this("StillUnimplemented");
  }
 
  public StillUnimplemented(String msg)

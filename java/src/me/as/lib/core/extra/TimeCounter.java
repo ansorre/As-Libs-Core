@@ -122,7 +122,7 @@ public class TimeCounter
     (
      counterName+
      " lasted: "+
-     StringUtil.equallySeparate(String.valueOf(getElapsed()), 3, ".")+
+     StringExtras.equallySeparate(String.valueOf(getElapsed()), 3, ".")+
      " milliseconds"
     );
   */

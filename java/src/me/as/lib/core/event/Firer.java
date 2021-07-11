@@ -17,13 +17,14 @@
 package me.as.lib.core.event;
 
 
-import java.util.*;
+import java.util.EventListener;
+import java.util.EventObject;
 
 
-public interface Firer
+public interface Firer<L extends EventListener, E extends EventObject>
 {
 
- void foreachAction(EventListener listener, Object param);
+ void foreachAction(L listener, E event);
 
 }
 

@@ -215,7 +215,7 @@ nun s po fa, generic array creation non esiste in Java!!!!!!!!
 
   if ((len=keys.size())>0)
   {
-   try {res=(V[])Array.newInstance(get(0).getClass(), len);} catch (Throwable tr){}
+   try {res=(V[])Array.newInstance(get(0).getClass(), len);} catch (Throwable ignore){}
 
    for (t=0;t<len;t++)
    {

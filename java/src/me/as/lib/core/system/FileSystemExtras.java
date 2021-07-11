@@ -19,9 +19,10 @@ package me.as.lib.core.system;
 
 
 import me.as.lib.core.StillUnimplemented;
+import me.as.lib.core.concurrent.ThreadExtras;
 import me.as.lib.core.extra.BoxFor3;
 import me.as.lib.core.extra.QuickSortExtras;
-import me.as.lib.core.io.util.FileBytesRoom;
+import me.as.lib.core.io.extra.FileBytesRoom;
 import me.as.lib.core.lang.ArrayExtras;
 import me.as.lib.core.lang.CalendarExtras;
 import me.as.lib.core.lang.StringExtras;
@@ -31,7 +32,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.lang.annotation.ElementType;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -43,10 +43,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static me.as.lib.core.lang.StringExtras.betterTrimNl;
-import static me.as.lib.core.lang.StringExtras.deAccentize;
 import static me.as.lib.core.lang.StringExtras.defaultCharsetName;
+import static me.as.lib.core.lang.StringExtras.generateRandomString;
 import static me.as.lib.core.lang.StringExtras.hasChars;
+import static me.as.lib.core.lang.StringExtras.isBlank;
 import static me.as.lib.core.lang.StringExtras.isNotBlank;
 import static me.as.lib.core.lang.StringExtras.newAutoString;
 import static me.as.lib.core.lang.StringExtras.replace;
@@ -113,6 +113,9 @@ public class FileSystemExtras
  {
   try
   {
+   if (isBlank(dname))
+    throw new RuntimeException("deleteTheTree with blank 'dname'");
+
    String root=((dname.endsWith(File.separator)) ? dname : dname+File.separator);
    String tmp;
    List<String> filesL=listTheTree(root);
@@ -134,7 +137,7 @@ public class FileSystemExtras
    do // his do/while loop seems unnecessary, anyway it's not expensive and I don't remember
       // why I did it but I remember that I really needed to do it
    {
-    files=StringExtras.removeNullAndEmpty(files);
+    files=StringExtras.purgeNullsAndEmpties(files);
     files=QuickSortExtras.sortStringsForLength(files, true);
     len=ArrayExtras.length(files);
 
@@ -309,16 +312,75 @@ public class FileSystemExtras
 
 
 
+ public static void runMakingATemporaryDirectoryAndDeletingItAtEnd(String insideDir, Consumer<String> runnable)
+ {
+  String theTemporaryDirectory=makeATemporaryDirectory(insideDir);
+
+  try
+  {
+   runnable.accept(theTemporaryDirectory);
+  }
+  finally
+  {
+   ThreadExtras.executeLater(500, ()->
+   {
+    deleteTheTree(theTemporaryDirectory);
+    deleteFile(theTemporaryDirectory);
+   });
+  }
+ }
+
+
+ public static String makeATemporaryDirectory(String insideDir)
+ {
+  String dir, res;
+  boolean exists;
+
+  synchronized (FileSystemExtras.class)
+  {
+   do
+   {
+    dir=getFileSystemCompatibleFileName(generateRandomString(12));
+    res=mergePath(insideDir, dir);
+
+    exists=exists(res);
+
+   } while (exists);
+
+   mkdirs(res);
+
+   if (!exists(res))
+    throw new RuntimeException("Cannot create dir '"+res+"'");
+  }
+
+  return res;
+ }
+
+
+
 
 
  public static String getFileSystemCompatibleFileName(String name)
+ {
+  return getMorePermissiveFileSystemCompatibleFileName(name, ".");
+ }
+
+ public static final String default_extraPermissiveAllowedChars=" ~=%–-.&'#@$()[]{},×+_`!";
+
+ public static String getMorePermissiveFileSystemCompatibleFileName(String name)
+ {
+  return getMorePermissiveFileSystemCompatibleFileName(name, default_extraPermissiveAllowedChars);
+ }
+
+
+ public static String getMorePermissiveFileSystemCompatibleFileName(String name, String extraPermissiveAllowedChars)
  {
   String res=null;
 
   try
   {
-   name=betterTrimNl(name);
-   name=deAccentize(name);
+   name=StringExtras.betterTrimNl(name);
+   name=StringExtras.deAccentize(name);
 
    StringBuilder sb=new StringBuilder();
    char ch;
@@ -327,14 +389,19 @@ public class FileSystemExtras
    for (t=0;t<len;t++)
    {
     ch=name.charAt(t);
-    if (ch=='.' ||
-        Character.isLetter(ch) ||
-        Character.isDigit(ch)) sb.append(ch);
-    else sb.append("_");
+    if ((hasChars(extraPermissiveAllowedChars) && extraPermissiveAllowedChars.indexOf(ch)>=0) ||
+     Character.isLetter(ch) ||
+     Character.isDigit(ch))
+     sb.append(ch);
+    else
+     sb.append("_");
    }
 
+   res=StringExtras.replaceAll(sb.toString(), " .", ".");
+   res=StringExtras.replaceAll(res, ". ", ".");
+   res=StringExtras.replaceAll(res, "  ", " ");
 
-   res=replace(sb.toString(), "__", "_");
+   res=StringExtras.replaceAll(sb.toString(), "__", "_");
    while (res.length()>1 && res.startsWith("_")) res=res.substring(1);
    while (res.length()>1 && res.endsWith("_")) res=res.substring(0, res.length()-1);
 
@@ -342,6 +409,7 @@ public class FileSystemExtras
 
   return res;
  }
+
 
 
 
@@ -379,7 +447,7 @@ public class FileSystemExtras
   Path dir=Path.of(dpath);
   int dend=dpath.length()+1;
 
-  try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, matcher))
+  try (DirectoryStream<Path> stream=Files.newDirectoryStream(dir, matcher))
   {
    for (Path p : stream)
    {
@@ -398,7 +466,7 @@ public class FileSystemExtras
 
  public static List<String> listTheTree(String dname)
  {
-  List<String> res=null;
+  List<String> res;
 
   try
   {
@@ -471,7 +539,7 @@ public class FileSystemExtras
   if (f.isDirectory())
   {
    String tmp, files[]=f.list();
-   int t, len=ArrayUtil.length(files);
+   int t, len=ArrayExtras.length(files);
 
    for (t=0;t<len;t++)
    {
@@ -707,6 +775,24 @@ public class FileSystemExtras
    return -1L;
   }
  }
+
+ public static boolean isDirectoryEmpty(String path)
+ {
+  if (isDirectory(path))
+  {
+   try (DirectoryStream<Path> dirStream=Files.newDirectoryStream(Path.of(path)))
+   {
+    return !dirStream.iterator().hasNext();
+   }
+   catch (Throwable tr)
+   {
+    return false;
+   }
+  }
+
+  return false;
+ }
+
 
 
 
@@ -1114,6 +1200,25 @@ public class FileSystemExtras
   if (data!=null) res=newAutoString(data, charsetName);
   return res;
  }
+
+
+ public static boolean deleteFileAndTheDirIfEmpty(String path)
+ {
+  boolean res=deleteFile(path);
+
+  if (res)
+  {
+   String dir=getDirAndFilename(path)[0];
+
+   if (isDirectoryEmpty(dir))
+   {
+    res=deleteFile(dir);
+   }
+  }
+
+  return res;
+ }
+
 
 
  public static boolean deleteFile(String path)
