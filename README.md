@@ -1,6 +1,7 @@
 # As-Libs-Core
 
-These are my own grown open source core Java libraries that I use for all my other Java projects.
+These are my own grown open source core Java libraries that I use for all my other Java projects.  
+Current version: 1.0.6
 
 ## Key points
 
