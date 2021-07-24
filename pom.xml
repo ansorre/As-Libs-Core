@@ -4,7 +4,7 @@
 
  <groupId>io.github.ansorre</groupId>
  <artifactId>as-libs-core</artifactId>
- <version>1.0.6-SNAPSHOT</version>
+ <version>1.0.6</version>
 
 
  <name>As-Libs-Core</name>
