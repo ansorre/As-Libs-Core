@@ -1,3 +1,7 @@
 RESERVED.*
 
+pom.xml.releaseBackup
+release.properties
+
 target/
+
