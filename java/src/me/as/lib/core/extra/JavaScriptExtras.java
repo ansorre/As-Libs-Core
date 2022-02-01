@@ -17,9 +17,23 @@
 package me.as.lib.core.extra;
 
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
+import me.as.lib.core.lang.ClassExtras;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptEngineManager;
+import java.lang.reflect.Method;
+
+import static me.as.lib.core.log.LogEngine.logOut;
+
+
+/*
+
+https://github.com/openjdk/nashorn
+Nashorn used to be part of the JDK until Java 14. This project provides a standalone version of Nashorn suitable for use with Java 11 and later.
+(NB: they say you need to configure as a Java module to use it, but in reality just put everything in the classpath as usual)
+
+*/
 
 public final class JavaScriptExtras
 {
@@ -52,14 +66,41 @@ public final class JavaScriptExtras
    }
 
    if (canDisableDeprecation)
-    return new jdk.nashorn.api.scripting.NashornScriptEngineFactory().getScriptEngine("--no-deprecation-warning");
+   {
+    try
+    {
+     Class<ScriptEngineFactory> sefc=ClassExtras.classFromNameNE("jdk.nashorn.api.scripting.NashornScriptEngineFactory");
+     ScriptEngineFactory sef=sefc.getConstructor().newInstance();
+     Method gse=sefc.getMethod("getScriptEngine", String[].class);
+     return (ScriptEngine)gse.invoke(sef, (Object)new String[]{"--no-deprecation-warning"});
+    }
+    catch (Throwable tr)
+    {
+     throw new RuntimeException(tr);
+    }
+   }
    else
-    return new ScriptEngineManager().getEngineByName("nashorn");
+   {
+    ScriptEngine res;
+
+    try
+    {
+     res=new ScriptEngineManager().getEngineByName("nashorn");
+    }
+    catch (Throwable tr)
+    {
+     res=null;
+    }
+
+    if (res==null)
+     throw new RuntimeException("Nashorn JavaScript engine cannot be found. If you are using a JDK version 15 or up please add to the classpath the standalone version of the Nashorn JavaScript engine that you can find here: https://github.com/openjdk/nashorn");
+
+    return res;
+   }
   }
  }
 
 
-/*
  public static void main(String args[])
  {
   try
@@ -72,7 +113,6 @@ public final class JavaScriptExtras
    throw new RuntimeException(tr);
   }
  }
-*/
 
 
 }

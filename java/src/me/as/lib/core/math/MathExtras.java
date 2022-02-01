@@ -1749,7 +1749,7 @@ public class MathExtras
  /**
   * Returns all combinations of the elements whose lenght is combinationLength, has repetitions, has order relevance
   * So for example:
-  * List<Object[]> bits=getAllCombinationsRO(elen, 0, 1);
+  * List&lt;Object[]&gt; bits=getAllCombinationsRO(elen, 0, 1);
   * gives all the 256 combations you would expect for the o and 1 values in a sequance of 8 bits!
   *
   * N.B.: order relevance means the 01 is different from 10 so both are returned not only one of them!!!

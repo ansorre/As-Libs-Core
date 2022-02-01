@@ -1133,40 +1133,51 @@ public class FileSystemExtras
  public static byte[] loadFromFile(String fname, boolean useMemoryMappedFile)
  {
   byte res[]=null;
+  RuntimeException throwThis=null;
 
   try
   {
    File f=new File(fname);
-   int size=(int)f.length();
-
-   if (size>0)
+   long fl=f.length();
+   if (fl>=Integer.MAX_VALUE)
+    throwThis=new RuntimeException("File is too big ("+StringExtras.formatLong(fl)+" bytes) to be loaded in one byte array!");
+   else
    {
-    byte data[]=new byte[size];
+    int size=(int)fl;
 
-    // DA USARSI SOLO IN CASI ASSAI PARTICOLARI! LEGGI IN  FileBytesRoom.java!
-    if (useMemoryMappedFile)
+    if (size>0)
     {
-     FileBytesRoom fbr=new FileBytesRoom(fname, true);
-     if (fbr.open("r"))
+     byte data[]=new byte[size];
+
+     // DA USARSI SOLO IN CASI ASSAI PARTICOLARI! LEGGI IN FileBytesRoom.java!
+     if (useMemoryMappedFile)
      {
-      fbr.read(data);
-      fbr.close();
+      FileBytesRoom fbr=new FileBytesRoom(fname, true);
+
+      if (fbr.open("r"))
+      {
+       fbr.read(data);
+       fbr.close();
+      }
+      else
+      {
+       throw new me.as.lib.core.io.IOException("The file could not be opened in read mode!");
+      }
      }
      else
      {
-      throw new me.as.lib.core.io.IOException("The file could not be opened in read mode!");
+      FileInputStream fis=new FileInputStream(f);
+      fis.read(data);
+      fis.close();
      }
-    }
-    else
-    {
-     FileInputStream fis=new FileInputStream(f);
-     fis.read(data);
-     fis.close();
-    }
 
-    res=data;
+     res=data;
+    }
    }
   } catch (Throwable tr) {res=null;}
+
+  if (throwThis!=null)
+   throw throwThis;
 
   return res;
  }

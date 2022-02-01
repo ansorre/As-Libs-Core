@@ -54,7 +54,6 @@ import static me.as.lib.core.extra.JavaScriptExtras.newJavaScriptEngine;
 import static me.as.lib.core.lang.ArrayExtras.isArray;
 import static me.as.lib.core.lang.ArrayExtras.isArrayOfPrimitive;
 import static me.as.lib.core.lang.ByteExtras.copyInNew;
-import static me.as.lib.core.log.LogEngine.logOut;
 import static me.as.lib.core.math.RandomExtras.intRandom;
 
 
@@ -1299,6 +1298,8 @@ public class StringExtras
  // Replace
 
 
+
+
  /**
   * Replaces the first substring of this string that matches the given <a
   * href="../extra/regex/Pattern.html#sum">regular expression</a> with the
@@ -1306,14 +1307,13 @@ public class StringExtras
   *
   * <p> An invocation of this method of the form
   * <i>str</i>{@code .replaceFirst(}<i>regex</i>{@code ,} <i>repl</i>{@code )}
-  * yields exactly the same result me.as the expression
+  * yields exactly the same result as the expression
   *
   * <blockquote>
   * <code>
-  * {@link java.util.regex.Pattern}.{@link
-  * java.util.regex.Pattern# compile compile}(<i>regex</i>).{@link
-  * java.util.regex.Pattern#matcher(java.lang.CharSequence) matcher}(<i>str</i>).{@link
-  * java.util.regex.Matcher#replaceFirst replaceFirst}(<i>repl</i>)
+  * {@link java.util.regex.Pattern}.{@link java.util.regex.Pattern#compile()}(<i>regex</i>).
+  * {@link java.util.regex.Pattern#matcher(java.lang.CharSequence) matcher}(<i>str</i>).
+  * {@link java.util.regex.Matcher#replaceFirst replaceFirst}(<i>repl</i>)
   * </code>
   * </blockquote>
   *
@@ -1338,7 +1338,6 @@ public class StringExtras
   * @see java.util.regex.Pattern
   *
   * @since 1.4
-  * @spec JSR-51
   */
  public static String replaceFirst(String string, String regex, String replacement)
  {
@@ -1359,10 +1358,10 @@ public class StringExtras
   *
   * <blockquote>
   * <code>
-  * {@link java.util.regex.Pattern}.{@link
-  * java.util.regex.Pattern# compile compile}(<i>regex</i>).{@link
-  * java.util.regex.Pattern#matcher(java.lang.CharSequence) matcher}(<i>str</i>).{@link
-  * java.util.regex.Matcher#replaceAll replaceAll}(<i>repl</i>)
+  * {@link java.util.regex.Pattern}.
+  * {@link java.util.regex.Pattern#compile()}(<i>regex</i>).
+  * {@link java.util.regex.Pattern#matcher(java.lang.CharSequence) matcher}(<i>str</i>).
+  * {@link java.util.regex.Matcher#replaceAll replaceAll}(<i>repl</i>)
   * </code>
   * </blockquote>
   *
@@ -1387,7 +1386,6 @@ public class StringExtras
   * @see java.util.regex.Pattern
   *
   * @since 1.4
-  * @spec JSR-51
   */
  public static String replaceAll(String string, String regex, String replacement)
  {
@@ -2082,7 +2080,7 @@ public class StringExtras
   * Converts a standard POSIX Shell globbing pattern into a regular expression
   * pattern. The result can be used with the standard {@link java.util.regex} API to
   * recognize strings which match the glob pattern.
-  * <p/>
+  *
   * See also, the POSIX Shell language:
   * http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_13_01
   *
@@ -3504,12 +3502,12 @@ public class StringExtras
   * GSCAT_BYENCLOSEDINT:<br>
   * Every children has a name that include an int. Children are sorted according to these int values.<br>
   * Valid samples are:<br>
-  * '[100] my name' ---> would be considered as 100 while sorting by int<br>
-  * '25 - a name' ---> would be considered as 25 while sorting by int<br>
-  * '123 321 124' ---> would be considered as 123 while sorting by int<br>
-  * 'You are 73 years old' ---> would be considered as 73 while sorting by int<br>
-  * 'His age is 12' ---> would be considered as 12 while sorting by int<br>
-  * 'We have 12,234 dollars in the cash' ---> would be considered as 12 while sorting by int<br><br>
+  * '[100] my name' -> would be considered as 100 while sorting by int<br>
+  * '25 - a name' -> would be considered as 25 while sorting by int<br>
+  * '123 321 124' -> would be considered as 123 while sorting by int<br>
+  * 'You are 73 years old' -> would be considered as 73 while sorting by int<br>
+  * 'His age is 12' -> would be considered as 12 while sorting by int<br>
+  * 'We have 12,234 dollars in the cash' -> would be considered as 12 while sorting by int<br><br>
   *
   * GSCAT_BYSTRING:<br>
   * Children are sorted by their string values according to the current charset<br><br>

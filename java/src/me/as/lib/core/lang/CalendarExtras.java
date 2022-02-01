@@ -449,9 +449,9 @@ public class CalendarExtras
   * @param hmsm an array with hour, minutes, seconds, milliseconds
   * @return
   *
-  * >0 if time hour, minutes, seconds, milliseconds is > hmsm
+  * &gt; 0 if time hour, minutes, seconds, milliseconds is &gt; hmsm
   * 0 if time hour, minutes, seconds, milliseconds is == hmsm
-  * <0 if time hour, minutes, seconds, milliseconds is < hmsm
+  * &lt; 0 if time hour, minutes, seconds, milliseconds is &lt; hmsm
   *
   * day, months and all the rest are not evaluated
   *
